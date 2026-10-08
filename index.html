@@ -104,7 +104,40 @@
       </div>
 
       <div class="drum" id="drum">
-        <div class="d-list" id="d-list"></div>
+        <div class="d-modes" id="d-modes"></div>
+
+        <div class="d-ctl" data-dmode="rud">
+          <div class="d-list" id="d-list"></div>
+          <label class="g-inline">킥 <select id="d-kick"></select></label>
+        </div>
+
+        <div class="d-ctl d-row" data-dmode="acc">
+          <label class="field"><span>연습</span><select id="d-acc-type"></select></label>
+          <label class="field" id="d-acc-n-field"><span>몇 개마다</span><select id="d-acc-n"></select></label>
+          <label class="field"><span>스티킹</span><select id="d-acc-stick"></select></label>
+          <button type="button" id="d-acc-new">🎲 새로 만들기</button>
+          <label class="check"><input type="checkbox" id="d-acc-strokes"> 업·다운 스트로크 표시</label>
+        </div>
+
+        <div class="d-ctl" data-dmode="groove">
+          <div class="d-list" id="d-grooves"></div>
+        </div>
+
+        <div class="d-ctl d-row" data-dmode="read">
+          <label class="field"><span>난이도</span>
+            <select id="d-read-level">
+              <option value="easy">쉬움 (4분·8분·2분)</option>
+              <option value="mid">보통 (+ 점4분·싱코페이션)</option>
+              <option value="hard">어려움 (+ 16분 조합)</option>
+            </select>
+          </label>
+          <label class="field"><span>길이</span>
+            <select id="d-read-bars"><option value="2">2마디</option><option value="4">4마디</option></select>
+          </label>
+          <label class="check"><input type="checkbox" id="d-read-count"> 세는 법 표시</label>
+          <button type="button" id="d-read-new" class="primary">🎲 새 문제</button>
+        </div>
+
         <div class="d-head">
           <b id="d-name"></b>
           <p id="d-desc"></p>
@@ -114,18 +147,18 @@
           <button type="button" id="d-play" class="primary">▶ 들어보기</button>
           <div class="m-bpm">
             <button type="button" id="d-down" aria-label="느리게">−</button>
-            <input type="number" id="d-bpm" min="30" max="240"> <small>BPM</small>
+            <input type="number" id="d-bpm" min="30" max="260"> <small>BPM</small>
             <button type="button" id="d-up" aria-label="빠르게">+</button>
           </div>
           <label class="check"><input type="checkbox" id="d-loop"> 반복</label>
           <label class="check"><input type="checkbox" id="d-click"> 박자 클릭</label>
-          <label class="g-inline">킥 <select id="d-kick"></select></label>
+          <span class="d-ladder">
+            <label class="check"><input type="checkbox" id="d-ladder"> 템포 계단: 반복마다</label>
+            <select id="d-ladder-step"></select>
+            <label class="m-max">최대 <input type="number" id="d-ladder-max" min="30" max="260"></label>
+          </span>
         </div>
-        <div class="d-legend">
-          <span><b class="r">R</b> 오른손</span><span><b class="l">L</b> 왼손</span><span><b class="k">K</b> 킥 (줄 아래 음표)</span>
-          <span><b>&gt;</b> 액센트 (세게)</span><span><b>♪</b> 작은 음표 = 꾸밈음 (플램 1개, 드래그 2개)</span>
-          <span>오른손 소리는 오른쪽, 왼손 소리는 왼쪽에서 들려요</span>
-        </div>
+        <div class="d-legend" id="d-legend"></div>
       </div>
 
       <div class="guide" id="guide">

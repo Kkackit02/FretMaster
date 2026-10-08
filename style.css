@@ -614,9 +614,11 @@ body[data-drill="drum"] .settings { display: none; }
   border-radius: 12px;
   overflow-x: auto;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
 }
-.d-score svg { width: 100%; height: auto; min-width: 360px; }
+.d-score svg { max-width: 100%; height: auto; flex: none; }
 .d-staff { stroke: #2b2620; stroke-width: 1.4; }
 .d-bar, .d-dot { fill: #2b2620; }
 .d-time { font: 800 19px Georgia, serif; fill: #2b2620; text-anchor: middle; }
@@ -641,3 +643,31 @@ body[data-drill="drum"] .settings { display: none; }
 .d-legend b.r { color: #6aa8e8; }
 .d-legend b.l { color: #e09a52; }
 .d-legend b.k { color: #5cc48a; }
+
+.d-modes { display: flex; gap: 4px; padding: 4px; background: var(--panel-2); border-radius: 12px; }
+.d-modes button { border: 0; background: transparent; color: var(--muted); padding: 7px 16px; border-radius: 9px; }
+.d-modes button.on { background: var(--text); color: var(--bg); font-weight: 700; }
+.d-ctl { display: grid; gap: 10px; justify-items: center; width: 100%; }
+.d-ctl.d-row { display: flex; flex-wrap: wrap; align-items: end; justify-content: center; gap: 10px 16px; }
+.d-ctl.d-row .field { min-width: 160px; }
+#d-grooves button { padding: 6px 12px; font-size: 13px; }
+#d-grooves button.on { border-color: var(--accent); color: var(--accent); }
+.d-ladder { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+
+.d-xhead { stroke: #1c1813; stroke-width: 1.8; fill: none; }
+.d-open { fill: none; stroke: #1c1813; stroke-width: 1.4; }
+.d-note ellipse.hollow { fill: none; stroke: #1c1813; stroke-width: 1.8; }
+.d-note.now .d-xhead { stroke: #e2483a; }
+.d-note.now ellipse.hollow { fill: none; stroke: #e2483a; }
+.d-hit { fill: transparent; }
+.d-score.editable .d-note { cursor: pointer; }
+.d-score.editable .d-note:hover ellipse { fill: #6b6252; }
+.d-stick.c { fill: #6b6252; font-size: 12px; font-weight: 600; }
+.d-stick.s-D { fill: #b23a2e; font-size: 12px; }
+.d-stick.s-U { fill: #2f8a57; font-size: 12px; }
+.d-stick.s-F { fill: #7a3fb0; font-size: 12px; }
+.d-stick.s-T { fill: #8a8070; font-size: 12px; }
+.d-legend b.s-D { color: #e06a5c; }
+.d-legend b.s-U { color: #5cc48a; }
+.d-legend b.s-F { color: #b48ae0; }
+.d-legend b.s-T { color: #a39883; }
