@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FretMaster</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top">
+    <h1>Fret<span>Master</span></h1>
+    <div class="stats">
+      <div><b id="st-correct">0</b><small>정답</small></div>
+      <div><b id="st-wrong">0</b><small>오답</small></div>
+      <div><b id="st-streak">0</b><small>연속</small></div>
+      <div><b id="st-avg">–</b><small>평균 반응</small></div>
+    </div>
+  </header>
+
+  <main>
+    <section class="stage">
+      <div class="tabs" id="drill-tabs" role="tablist"></div>
+
+      <div class="guide" id="guide">
+        <div class="guide-grid">
+          <div class="circle-wrap">
+            <svg id="g-circle" viewBox="0 0 340 340" role="img" aria-label="5도권"></svg>
+            <div class="g-row">
+              <label class="g-inline">키 <select id="g-key"></select></label>
+              <label class="check"><input type="checkbox" id="g-sevenths"> 7화음으로</label>
+            </div>
+          </div>
+
+          <div class="g-side">
+            <div class="g-viewer">
+              <div class="g-name"><b id="g-name">C</b><span id="g-numeral"></span></div>
+              <div class="prompt-tones" id="g-tones"></div>
+              <div class="g-pills" id="g-types"></div>
+              <div class="g-pills" id="g-forms"></div>
+              <div class="g-row">
+                <button type="button" id="g-listen">▶ 들어보기</button>
+                <button type="button" id="g-add">＋ 진행에 추가</button>
+                <button type="button" id="g-setkey" class="ghost">이 코드를 키로</button>
+              </div>
+            </div>
+            <div class="g-block">
+              <div class="g-title">이 키의 코드 (다이어토닉)</div>
+              <div class="g-chords" id="g-diatonic"></div>
+            </div>
+            <div class="g-block">
+              <div class="g-title">다음에 오기 좋은 코드</div>
+              <div class="g-chords" id="g-suggest"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="g-block g-prog-wrap">
+          <div class="g-prog-head">
+            <div class="g-title">코드 진행 <small id="g-prog-count"></small></div>
+            <div class="g-row">
+              <button type="button" id="g-play" class="primary">▶ 재생</button>
+              <label class="check"><input type="checkbox" id="g-loop"> 반복</label>
+              <select id="g-bpm"></select>
+              <select id="g-beats"></select>
+              <select id="g-preset"></select>
+              <button type="button" id="g-clear" class="ghost">지우기</button>
+            </div>
+          </div>
+          <div class="g-prog" id="g-prog"></div>
+        </div>
+      </div>
+
+      <div class="prompt" id="prompt">
+        <div class="prompt-string" id="prompt-string">&nbsp;</div>
+        <div class="prompt-note" id="prompt-note">🎸</div>
+        <div class="prompt-tones" id="prompt-tones"></div>
+        <div class="prompt-status" id="status">시작을 누르고 마이크 사용을 허용하세요</div>
+      </div>
+
+      <div class="controls">
+        <button id="btn-start" class="primary">시작</button>
+        <button id="btn-hint" disabled>힌트 <kbd>H</kbd></button>
+        <button id="btn-skip" disabled>건너뛰기 <kbd>Space</kbd></button>
+      </div>
+
+      <div class="tuner">
+        <div class="tuner-note" id="det-note">–</div>
+        <div class="tuner-meter" title="음정 (±50 cent)">
+          <div class="tuner-center"></div>
+          <div class="tuner-needle" id="det-needle"></div>
+        </div>
+        <div class="level" title="입력 레벨"><div id="level-bar"></div><div id="level-gate"></div></div>
+      </div>
+
+      <div class="chroma" id="chroma" title="지금 들리는 음 분포"></div>
+
+      <div class="piano" id="piano" aria-label="피아노 건반"></div>
+    </section>
+
+    <section class="board-wrap">
+      <div id="fretboard"></div>
+    </section>
+
+    <details class="settings" open>
+      <summary>설정</summary>
+      <div class="grid">
+        <label class="field" data-for="click">
+          <span>문제 종류</span>
+          <select id="set-board-task">
+            <option value="note">음 위치 (예: 3번 줄 A)</option>
+            <option value="chord">코드 구성음 (예: Am7 → A·C·E·G)</option>
+          </select>
+        </label>
+
+        <label class="field" data-for="note click">
+          <span>출제 방식</span>
+          <select id="set-mode">
+            <option value="string">줄 + 음이름 (예: 3번 줄 A)</option>
+            <option value="any">음이름만 (아무 줄에서나)</option>
+          </select>
+        </label>
+
+        <label class="field" data-for="tones strum click">
+          <span>코드 범위</span>
+          <select id="set-chordset">
+            <option value="common">자주 쓰는 코드 (오픈 코드 기준)</option>
+            <option value="all">모든 근음 (12키 전부)</option>
+          </select>
+        </label>
+
+        <div class="field" data-for="strum">
+          <span>운지 형태</span>
+          <div id="set-forms" class="chips"></div>
+        </div>
+
+        <div class="field" data-for="tones strum click">
+          <span>코드 종류</span>
+          <div id="set-chords" class="chips"></div>
+        </div>
+
+        <div class="field">
+          <span>연습할 줄</span>
+          <div id="set-strings" class="chips"></div>
+        </div>
+
+        <div class="field">
+          <span>프렛 범위</span>
+          <div class="range">
+            <input type="number" id="set-fret-min" min="0" max="24"> ~
+            <input type="number" id="set-fret-max" min="0" max="24">
+          </div>
+        </div>
+
+        <label class="field">
+          <span>음이름 표기</span>
+          <select id="set-naming">
+            <option value="letter">C D E</option>
+            <option value="solfege">도 레 미</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>변화음 표기</span>
+          <select id="set-accidental">
+            <option value="auto">관용 표기 (B♭, F♯, C♯m …)</option>
+            <option value="sharp">♯ (샵)</option>
+            <option value="flat">♭ (플랫)</option>
+            <option value="mixed">섞어서</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>마이크 감도 <small id="sens-val"></small></span>
+          <input type="range" id="set-sens" min="1" max="100">
+        </label>
+
+        <div class="field checks">
+          <label class="check"><input type="checkbox" id="set-natural"> 자연음만 (♯/♭ 제외, 코드는 근음 기준)</label>
+          <label class="check" data-for="click"><input type="checkbox" id="set-piano-labels"> 건반에 음이름 표시</label>
+          <label class="check" data-for="tones click"><input type="checkbox" id="set-inorder"> 구성음 순서대로 (R → 3 → 5 → 7)</label>
+          <label class="check"><input type="checkbox" id="set-weak"> 약한 음 자주 출제</label>
+          <label class="check"><input type="checkbox" id="set-sound"> 정답 효과음</label>
+        </div>
+
+        <div class="field">
+          <span>기록</span>
+          <button id="btn-reset" class="ghost">약점 기록 초기화</button>
+        </div>
+      </div>
+    </details>
+  </main>
+
+  <script src="pitch.js"></script>
+  <script src="chords.js"></script>
+  <script src="guide.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
