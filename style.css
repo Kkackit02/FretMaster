@@ -308,10 +308,12 @@ body[data-drill="strum"] .tuner-meter { visibility: hidden; }
   user-select: none;
   touch-action: manipulation;
 }
-body[data-drill="click"] .piano,
+body[data-drill="piano"] .piano,
 body[data-drill="guide"] .piano { display: flex; }
-body[data-drill="click"] .tuner,
-body[data-drill="click"] #btn-start { display: none; }
+body[data-drill="board"] .tuner,
+body[data-drill="board"] #btn-start,
+body[data-drill="piano"] .tuner,
+body[data-drill="piano"] #btn-start { display: none; }
 
 .key {
   font: inherit;

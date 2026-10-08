@@ -26,10 +26,11 @@
     note:  { label: '단음' },
     tones: { label: '코드 구성음' },
     strum: { label: '코드 스트럼' },
-    click: { label: '건반 · 지판' },
+    board: { label: '지판 찍기' },
+    piano: { label: '건반 코드' },
     guide: { label: '코드 가이드' },
   };
-  const MIC_FREE = new Set(['click']); // 화면을 눌러서 답하는 모드
+  const MIC_FREE = new Set(['board', 'piano']); // 화면을 눌러서 답하는 모드
   const PIANO_LOW = 60;  // 건반 시작 (C4)
   const PIANO_KEYS = 24; // 두 옥타브
 
@@ -76,9 +77,8 @@
   const settings = { ...DEFAULTS, ...(saved.settings || {}) };
   // 관용 표기(auto)가 생기기 전 저장된 설정이면 기본값으로 옮김
   if (saved.settings && !saved.settings.forms) settings.accidental = 'auto';
-  // 피아노/지판 탭이 '건반 · 지판' 하나로 합쳐지기 전 설정
-  if (settings.drill === 'piano') { settings.drill = 'click'; settings.boardTask = 'chord'; }
-  if (settings.drill === 'board') settings.drill = 'click';
+  // 잠깐 있었던 '건반 · 지판' 통합 탭
+  if (settings.drill === 'click') settings.drill = 'board';
   let stats = saved.stats || {}; // key -> { seen, clean, cleanMs }
 
   // ---------- 상태 ----------
@@ -109,8 +109,9 @@
     weak: $('set-weak'), sound: $('set-sound'), sens: $('set-sens'), sensVal: $('sens-val'),
   };
 
-  const isClickDrill = () => settings.drill === 'click';
-  const isChordDrill = () => (isClickDrill() ? settings.boardTask === 'chord' : settings.drill !== 'note');
+  const isBoard = () => settings.drill === 'board';
+  const isPiano = () => settings.drill === 'piano';
+  const isChordDrill = () => (isBoard() ? settings.boardTask === 'chord' : settings.drill !== 'note');
 
   // ---------- 음 이름 ----------
   function noteName(pc, acc = defaultAccidental(pc)) {
@@ -147,7 +148,7 @@
         const midi = OPEN_MIDI[s] + f;
         const pc = midi % 12;
         if (settings.naturalOnly && !NATURAL.has(pc)) continue;
-        const prefix = isClickDrill() ? 'click:' : '';
+        const prefix = isBoard() ? 'board:' : '';
         const key = prefix + (settings.mode === 'string' ? `${s}:${pc}` : `*:${pc}`);
         if (!pool.has(key)) {
           pool.set(key, { key, pc, string: settings.mode === 'string' ? s : null, targets: [] });
@@ -227,7 +228,7 @@
     strum.armed = false; // 이전 문제의 소리가 울리는 중일 수 있으니 새로 칠 때까지 대기
 
     if (!isChordDrill()) {
-      const how = !isClickDrill() ? '기타로 쳐보세요' : item.string ? '지판에서 찾아 눌러 보세요' : '지판이나 건반에서 눌러 보세요';
+      const how = !isBoard() ? '기타로 쳐보세요' : item.string ? '지판에서 찾아 눌러 보세요' : '지판에서 아무 줄이나 눌러 보세요';
       showPrompt(item.string ? `${item.string}번 줄` : '아무 줄에서나', noteName(item.pc, acc), how);
     } else {
       question.chord = FretChords.build(item.rootPc, item.type, acc, settings.naming);
@@ -237,11 +238,17 @@
           question.chord.name,
           '한 음씩 쳐보세요',
         );
-      } else if (isClickDrill()) {
+      } else if (isBoard()) {
         showPrompt(
-          settings.inOrder ? '구성음을 순서대로' : '구성음 완성하기',
+          settings.inOrder ? '지판에서 구성음을 순서대로' : '지판에서 구성음 찾기',
           question.chord.name,
-          '건반이나 지판을 눌러 보세요',
+          '구성음 자리를 지판에서 눌러 보세요',
+        );
+      } else if (isPiano()) {
+        showPrompt(
+          settings.inOrder ? '건반으로 구성음을 순서대로' : '건반으로 구성음 완성하기',
+          question.chord.name,
+          '건반을 눌러 보세요',
         );
       } else {
         const form = item.form ? FretChords.FORMS[item.form].label : '운지 자유';
@@ -305,7 +312,7 @@
     renderTones(true);
     renderPiano();
     renderBoard(marks);
-    if (isClickDrill() && isChordDrill()) playChord();
+    if (isPiano() || (isBoard() && isChordDrill())) playChord();
     else playChime();
     nextTimer = setTimeout(nextQuestion, delay);
   }
@@ -500,7 +507,7 @@
   function giveHint() {
     if (phase !== 'ask' || !question) return;
     question.hinted = true;
-    setStatus(isClickDrill() && isChordDrill() ? '파란 표시가 구성음이에요 (건반 · 지판)' : isClickDrill() ? '파란 점 자리를 눌러 보세요' : isChordDrill() ? '지판에 구성음 위치를 표시했어요 (주황 = 근음)' : '파란 점 위치를 쳐보세요', 'reveal');
+    setStatus(isPiano() ? '파란 테두리 건반이 구성음이에요' : isBoard() && !isChordDrill() ? '파란 점 자리를 눌러 보세요' : isChordDrill() ? '지판에 구성음 위치를 표시했어요 (주황 = 근음)' : '파란 점 위치를 쳐보세요', 'reveal');
     if (settings.drill === 'strum') renderTones(true);
     renderChromaTargets();
     renderPiano();
@@ -692,7 +699,7 @@
   function onBoardClick(s, f) {
     const midi = OPEN_MIDI[s] + f;
     playTone(midi, 0, 1.6, 0.2);
-    if (!isClickDrill() || phase !== 'ask' || !question) return;
+    if (!isBoard() || phase !== 'ask' || !question) return;
     if (isChordDrill()) boardChord(s, f, midi);
     else boardNote(s, f, midi);
   }
@@ -710,22 +717,6 @@
     setStatus(`${s}번 줄 ${f}프렛은 ${noteName(midi % 12, question.acc)}${why}`, 'wrong');
     question.marks.push({ s, f, midi, cls: 'wrong' });
     renderBoard(question.hinted ? question.marks.concat(hintMarks()) : question.marks);
-  }
-
-  // 건반으로 단음 문제: 줄이 정해지지 않은 문제만 건반으로 답할 수 있음
-  function pianoNote(midi, key) {
-    if (question.string) {
-      setStatus(`${question.string}번 줄 문제는 지판에서 눌러 주세요`, 'reveal');
-      return;
-    }
-    if (midi % 12 === question.pc) {
-      const marks = question.targets.map((t) => ({ ...t, cls: 'answer' }));
-      finishCorrect(`정답! ${noteNameWithOctave(midi)}`, marks, CORRECT_DELAY_MS);
-      return;
-    }
-    countMistake(`p${midi % 12}`);
-    setStatus(`${noteNameWithOctave(midi)} — 다시 해보세요`, 'wrong');
-    flashWrong(key);
   }
 
   function flashWrong(key) {
@@ -782,8 +773,7 @@
 
   function onPianoKey(midi, key) {
     playTone(midi);
-    if (!isClickDrill() || phase !== 'ask' || !question) return;
-    if (!isChordDrill()) { pianoNote(midi, key); return; }
+    if (!isPiano() || phase !== 'ask' || !question) return;
     const before = question.mistakes;
     const isTone = question.chord.tones.some((t) => t.pc === midi % 12);
     judgeTone(midi);
@@ -795,16 +785,11 @@
   function renderPiano() {
     if (!el.piano.childElementCount) return;
     const isGuide = settings.drill === 'guide';
-    const chord = isGuide ? pianoChord : isClickDrill() && isChordDrill() ? question?.chord : null;
+    const chord = isGuide ? pianoChord : isPiano() ? question?.chord : null;
     const found = new Set();
     const hint = new Set();
     const names = new Map();
     if (isGuide && chord) chord.tones.forEach((t) => { found.add(t.pc); names.set(t.pc, t.name); });
-    // 단음 문제: 정답/힌트일 때 그 음 건반 표시
-    if (isClickDrill() && !isChordDrill() && question) {
-      if (phase === 'result') found.add(question.pc);
-      else if (question.hinted) hint.add(question.pc);
-    }
     if (chord && !isGuide) {
       chord.tones.forEach((t, i) => {
         const revealed = question.found.has(i) || phase === 'result';
@@ -948,7 +933,7 @@
     }
 
     // 지판 찍기 모드: 칸마다 투명한 클릭 영역
-    if (isClickDrill()) {
+    if (isBoard()) {
       for (const s of STRINGS) {
         for (let f = 0; f <= n; f++) {
           const x = f === 0 ? FB.left - 44 : FB.left + (f - 1) * FB.fretW;

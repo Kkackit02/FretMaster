@@ -104,7 +104,7 @@
     <details class="settings" open>
       <summary>설정</summary>
       <div class="grid">
-        <label class="field" data-for="click">
+        <label class="field" data-for="board">
           <span>문제 종류</span>
           <select id="set-board-task">
             <option value="note">음 위치 (예: 3번 줄 A)</option>
@@ -112,7 +112,7 @@
           </select>
         </label>
 
-        <label class="field" data-for="note click">
+        <label class="field" data-for="note board">
           <span>출제 방식</span>
           <select id="set-mode">
             <option value="string">줄 + 음이름 (예: 3번 줄 A)</option>
@@ -120,7 +120,7 @@
           </select>
         </label>
 
-        <label class="field" data-for="tones strum click">
+        <label class="field" data-for="tones strum board piano">
           <span>코드 범위</span>
           <select id="set-chordset">
             <option value="common">자주 쓰는 코드 (오픈 코드 기준)</option>
@@ -133,7 +133,7 @@
           <div id="set-forms" class="chips"></div>
         </div>
 
-        <div class="field" data-for="tones strum click">
+        <div class="field" data-for="tones strum board piano">
           <span>코드 종류</span>
           <div id="set-chords" class="chips"></div>
         </div>
@@ -176,8 +176,8 @@
 
         <div class="field checks">
           <label class="check"><input type="checkbox" id="set-natural"> 자연음만 (♯/♭ 제외, 코드는 근음 기준)</label>
-          <label class="check" data-for="click"><input type="checkbox" id="set-piano-labels"> 건반에 음이름 표시</label>
-          <label class="check" data-for="tones click"><input type="checkbox" id="set-inorder"> 구성음 순서대로 (R → 3 → 5 → 7)</label>
+          <label class="check" data-for="piano"><input type="checkbox" id="set-piano-labels"> 건반에 음이름 표시</label>
+          <label class="check" data-for="tones board piano"><input type="checkbox" id="set-inorder"> 구성음 순서대로 (R → 3 → 5 → 7)</label>
           <label class="check"><input type="checkbox" id="set-weak"> 약한 음 자주 출제</label>
           <label class="check"><input type="checkbox" id="set-sound"> 정답 효과음</label>
         </div>
