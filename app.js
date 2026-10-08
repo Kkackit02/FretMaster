@@ -31,6 +31,7 @@
     scale: { label: '스케일' },
     ear:   { label: '귀 훈련' },
     guide: { label: '코드 가이드' },
+    drum:  { label: '드럼 루디먼트' },
   };
   const MIC_FREE = new Set(['board', 'piano']); // 화면을 눌러서 답하는 모드
   const PIANO_LOW = 60;  // 건반 시작 (C4)
@@ -91,7 +92,7 @@
   let nextTimer = null;
   let guide = null;       // 코드 가이드 (guide.js)
   let scales = null;      // 스케일 연습 (scales.js)
-  const PAGES = new Set(['guide', 'scale', 'ear']); // 자체 화면을 가진 탭 (guide.js, scales.js, ear.js)
+  const PAGES = new Set(['guide', 'scale', 'ear', 'drum']); // 자체 화면을 가진 탭 (guide.js, scales.js, ear.js, drum.js)
   const pages = {};       // 탭 id → 모듈
   let pianoChord = null;  // 가이드에서 건반에 보여줄 코드
 
@@ -1034,7 +1035,7 @@
       accFor: (pc, type) => pickAccidental(pc, type, true),
       score: scoreExternal,
     });
-    Object.assign(pages, { guide, scale: scales, ear });
+    Object.assign(pages, { guide, scale: scales, ear, drum: FretDrum.init({ settings, persist }) });
     FretMetronome.init({ settings, persist });
 
     applyDrill();
@@ -1213,6 +1214,7 @@
     if (e.target.matches('input, select, textarea') || e.repeat) return;
     if (e.code === 'Space' && settings.drill === 'guide') { e.preventDefault(); guide.togglePlay(); }
     else if (e.code === 'Space' && settings.drill === 'ear') { e.preventDefault(); pages.ear.replay(); }
+    else if (e.code === 'Space' && settings.drill === 'drum') { e.preventDefault(); pages.drum.toggle(); }
     else if (e.code === 'KeyH' && settings.drill === 'ear') pages.ear.giveUp();
     else if (e.code === 'Space') { e.preventDefault(); skip(); }
     else if (e.code === 'KeyH') giveHint();
