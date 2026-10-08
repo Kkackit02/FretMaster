@@ -167,5 +167,10 @@
     return score >= 0.75 && score >= top.score - 0.03 && tonesHeard;
   }
 
-  global.FretChords = { TYPES, FORMS, build, best, matches, shapeOf, rootFret };
+  /** 근음에서 semi 반음, 글자로 step칸 떨어진 음의 철자 (스케일용, 예: F 메이저의 4음 → B♭) */
+  function spellDegree(rootPc, semi, step, acc = 'sharp', naming = 'letter') {
+    return spell(rootLetter(rootPc, acc) + step, (rootPc + semi) % 12, naming);
+  }
+
+  global.FretChords = { TYPES, FORMS, build, best, matches, shapeOf, rootFret, spellDegree };
 })(window);

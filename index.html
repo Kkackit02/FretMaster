@@ -21,6 +21,45 @@
     <section class="stage">
       <div class="tabs" id="drill-tabs" role="tablist"></div>
 
+      <div class="scale" id="scale">
+        <div class="s-controls">
+          <label class="field"><span>근음</span><select id="s-root"></select></label>
+          <label class="field"><span>스케일</span><select id="s-type"></select></label>
+          <label class="field"><span>포지션</span><select id="s-pos"></select></label>
+          <label class="field"><span>방향</span>
+            <select id="s-dir">
+              <option value="up">올라가기</option>
+              <option value="down">내려가기</option>
+              <option value="updown">올라갔다 내려오기</option>
+            </select>
+          </label>
+          <label class="field"><span>지판 표시</span>
+            <select id="s-label">
+              <option value="name">음이름</option>
+              <option value="degree">도수 (R, ♭3, 5 …)</option>
+            </select>
+          </label>
+          <label class="field"><span>듣기 속도</span><select id="s-bpm"></select></label>
+        </div>
+
+        <div class="s-info">
+          <b id="s-name"></b>
+          <div class="prompt-tones" id="s-notes"></div>
+        </div>
+
+        <div class="s-next" id="s-next"></div>
+        <div class="s-msg" id="s-msg"></div>
+
+        <div class="g-row s-actions">
+          <button type="button" id="s-listen">▶ 들어보기</button>
+          <button type="button" id="s-click">👆 지판으로 따라가기</button>
+          <button type="button" id="s-mic">🎸 기타로 따라 치기</button>
+          <button type="button" id="s-stop" class="ghost" hidden>그만하기</button>
+          <label class="check"><input type="checkbox" id="s-show"> 운지 보여주기</label>
+        </div>
+        <div class="s-best" id="s-best"></div>
+      </div>
+
       <div class="guide" id="guide">
         <div class="guide-grid">
           <div class="circle-wrap">
@@ -193,6 +232,7 @@
   <script src="pitch.js"></script>
   <script src="chords.js"></script>
   <script src="guide.js"></script>
+  <script src="scales.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

@@ -28,6 +28,7 @@
     strum: { label: '코드 스트럼' },
     board: { label: '지판 찍기' },
     piano: { label: '건반 코드' },
+    scale: { label: '스케일' },
     guide: { label: '코드 가이드' },
   };
   const MIC_FREE = new Set(['board', 'piano']); // 화면을 눌러서 답하는 모드
@@ -88,6 +89,8 @@
   let lastKey = null;
   let nextTimer = null;
   let guide = null;       // 코드 가이드 (guide.js)
+  let scales = null;      // 스케일 연습 (scales.js)
+  const PAGES = new Set(['guide', 'scale']); // 문제를 내지 않는 탭
   let pianoChord = null;  // 가이드에서 건반에 보여줄 코드
 
   const audio = { ctx: null, stream: null, analyser: null, buf: null, chromaAnalyser: null, spectrum: null, chroma: new Float32Array(12), timer: 0 };
@@ -330,6 +333,7 @@
 
   // ---------- 단음 판정 ----------
   function onStableNote(midi) {
+    if (settings.drill === 'scale') { scales.onNote(midi); return; }
     if (phase !== 'ask' || !question) return;
     if (settings.drill === 'note') judgeNote(midi);
     else if (settings.drill === 'tones') judgeTone(midi);
@@ -699,6 +703,7 @@
   function onBoardClick(s, f) {
     const midi = OPEN_MIDI[s] + f;
     playTone(midi, 0, 1.6, 0.2);
+    if (settings.drill === 'scale') { scales.onClick(s, f, midi); return; }
     if (!isBoard() || phase !== 'ask' || !question) return;
     if (isChordDrill()) boardChord(s, f, midi);
     else boardNote(s, f, midi);
@@ -927,13 +932,13 @@
       }
       const label = m.label ?? noteName(m.midi % 12, question?.acc === 'flat' ? 'flat' : 'sharp');
       parts.push(
-        `<g class="fb-mark ${m.cls} pop"><circle cx="${fx(m.f)}" cy="${sy(m.s)}" r="11"/>` +
+        `<g class="fb-mark ${m.cls}${m.still ? '' : ' pop'}"><circle cx="${fx(m.f)}" cy="${sy(m.s)}" r="11"/>` +
         `<text x="${fx(m.f)}" y="${sy(m.s)}">${label}</text></g>`,
       );
     }
 
     // 지판 찍기 모드: 칸마다 투명한 클릭 영역
-    if (isBoard()) {
+    if (isBoard() || settings.drill === 'scale') {
       for (const s of STRINGS) {
         for (let f = 0; f <= n; f++) {
           const x = f === 0 ? FB.left - 44 : FB.left + (f - 1) * FB.fretW;
@@ -954,14 +959,18 @@
       const btn = e.target.closest('button[data-drill]');
       if (!btn || btn.dataset.drill === settings.drill) return;
       const from = settings.drill;
-      const fromMicFree = MIC_FREE.has(from) || from === 'guide';
+      const fromMicFree = MIC_FREE.has(from) || PAGES.has(from);
       if (from === 'guide') guide.deactivate();
+      if (from === 'scale') scales.deactivate();
       settings.drill = btn.dataset.drill;
       persist();
       applyDrill();
       if (settings.drill === 'guide') {
         stopSession('');
         guide.activate();
+      } else if (settings.drill === 'scale') {
+        stopSession('');
+        scales.activate();
       } else if (MIC_FREE.has(settings.drill)) {
         if (audio.ctx) stopSession(); // 마이크는 필요 없으니 끔
         startClickDrill();
@@ -984,9 +993,23 @@
         return shape ? shape.filter((p) => p.f !== null).map((p) => OPEN_MIDI[p.s] + p.f) : null;
       },
     });
+    scales = FretScales.init({
+      settings, persist, noteName, noteNameWithOctave, renderBoard, playTone,
+      accFor: (pc, type) => pickAccidental(pc, type, true),
+      chime: playChime,
+      startMic: async () => { if (!audio.ctx) await startAudio(); },
+      stopMic: () => {
+        if (!audio.ctx) return;
+        stopAudio();
+        el.level.style.width = '0';
+        el.detNote.textContent = '–';
+        el.needle.style.opacity = 0;
+      },
+    });
     applyDrill();
     if (MIC_FREE.has(settings.drill)) startClickDrill();
     if (settings.drill === 'guide') guide.activate();
+    if (settings.drill === 'scale') scales.activate();
 
     el.board.addEventListener('pointerdown', (e) => {
       const hit = e.target.closest('.fb-hit');
@@ -1081,6 +1104,7 @@
       renderPiano();
       persist();
       if (settings.drill === 'guide') guide.render();
+      else if (settings.drill === 'scale') scales.render();
       else if (requeue && phase !== 'idle') nextQuestion();
       else renderBoard();
     };
@@ -1127,7 +1151,7 @@
   }
 
   async function toggle() {
-    if (MIC_FREE.has(settings.drill) || settings.drill === 'guide') return;
+    if (MIC_FREE.has(settings.drill) || PAGES.has(settings.drill)) return;
     if (audio.ctx) {
       stopSession();
       return;

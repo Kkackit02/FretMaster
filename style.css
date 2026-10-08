@@ -470,3 +470,40 @@ body[data-drill="guide"] .chroma { display: none; }
   color: var(--muted);
 }
 .g-del:hover { color: var(--bad); }
+
+/* ---------- 스케일 ---------- */
+.scale { display: none; width: 100%; gap: 14px; justify-items: center; }
+body[data-drill="scale"] .scale { display: grid; }
+body[data-drill="scale"] .prompt,
+body[data-drill="scale"] .controls,
+body[data-drill="scale"] .chroma,
+body[data-drill="scale"] .piano { display: none; }
+
+.s-controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px 14px;
+  width: 100%;
+}
+.s-controls select { width: 100%; }
+.s-info { display: grid; gap: 8px; justify-items: center; }
+.s-info > b { font-size: 26px; }
+.s-info .prompt-tones { margin: 0; flex-wrap: wrap; }
+
+.s-next { display: grid; justify-items: center; min-height: 0; }
+.s-next:empty { display: none; }
+.s-next small { color: var(--muted); font-size: 13px; }
+.s-next b { font-size: 64px; line-height: 1.05; color: var(--hint); }
+.s-next span { color: var(--muted); font-size: 14px; }
+.s-msg { min-height: 1.5em; color: var(--muted); font-size: 16px; text-align: center; }
+.s-msg.good { color: var(--good); font-weight: 700; }
+.s-msg.bad { color: var(--bad); font-weight: 600; }
+.s-actions { justify-content: center; }
+.s-actions button.on { border-color: var(--accent); color: var(--accent); }
+.s-best { color: var(--muted); font-size: 13px; min-height: 1.2em; }
+
+.fb-mark.scale circle { fill: #cfc4ad; }
+.fb-mark.done circle { fill: var(--good); }
+.fb-mark.next circle { fill: var(--hint); }
+.fb-mark.next { animation: nextpulse 1s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes nextpulse { 50% { transform: scale(1.25); } }
