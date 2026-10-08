@@ -18,6 +18,23 @@
   </header>
 
   <main>
+    <section class="metro" aria-label="메트로놈">
+      <button type="button" id="m-toggle" class="m-toggle" title="메트로놈 켜기/끄기">▶</button>
+      <span class="m-label">메트로놈</span>
+      <div class="m-bpm">
+        <button type="button" id="m-down" aria-label="느리게">−</button>
+        <input type="number" id="m-bpm" min="30" max="260"> <small>BPM</small>
+        <button type="button" id="m-up" aria-label="빠르게">+</button>
+      </div>
+      <select id="m-beats" aria-label="박자"></select>
+      <div class="m-dots" id="m-dots"></div>
+      <label class="check m-trainer"><input type="checkbox" id="m-trainer"> 점점 빠르게</label>
+      <select id="m-every" aria-label="몇 마디마다"></select>
+      <select id="m-step" aria-label="얼마나"></select>
+      <label class="m-max">최대 <input type="number" id="m-max" min="30" max="260"></label>
+      <span class="m-info" id="m-info"></span>
+    </section>
+
     <section class="stage">
       <div class="tabs" id="drill-tabs" role="tablist"></div>
 
@@ -60,6 +77,32 @@
         <div class="s-best" id="s-best"></div>
       </div>
 
+      <div class="ear" id="ear">
+        <div class="s-controls">
+          <label class="field"><span>문제 종류</span><select id="e-task"></select></label>
+          <label class="field" id="e-dir-field"><span>들려주는 방법</span>
+            <select id="e-dir">
+              <option value="up">올라가며 (낮은 음 → 높은 음)</option>
+              <option value="down">내려가며</option>
+              <option value="together">동시에</option>
+              <option value="mixed">섞어서</option>
+            </select>
+          </label>
+        </div>
+        <div class="field e-pick-wrap">
+          <span id="e-pick-title"></span>
+          <div class="chips" id="e-pick"></div>
+        </div>
+        <div class="e-question" id="e-question"></div>
+        <div class="g-row e-tools">
+          <button type="button" id="e-replay" class="primary">🔊 다시 듣기 <kbd>Space</kbd></button>
+          <button type="button" id="e-ref">기준음 A 듣기</button>
+          <button type="button" id="e-giveup" class="ghost">모르겠어요 <kbd>H</kbd></button>
+        </div>
+        <div class="e-answers" id="e-answers"></div>
+        <div class="e-msg" id="e-msg"></div>
+      </div>
+
       <div class="guide" id="guide">
         <div class="guide-grid">
           <div class="circle-wrap">
@@ -76,6 +119,7 @@
               <div class="prompt-tones" id="g-tones"></div>
               <div class="g-pills" id="g-types"></div>
               <div class="g-pills" id="g-forms"></div>
+              <div class="g-legend" id="g-legend" hidden>초록 = 3음 (또는 sus의 2·4음) · 파랑 = 7음</div>
               <div class="g-row">
                 <button type="button" id="g-listen">▶ 들어보기</button>
                 <button type="button" id="g-add">＋ 진행에 추가</button>
@@ -106,6 +150,16 @@
             </div>
           </div>
           <div class="g-prog" id="g-prog"></div>
+          <div class="g-row g-gt-row">
+            <button type="button" id="g-gt">🎯 가이드톤 연습</button>
+            <select id="g-gt-input" aria-label="입력 방법">
+              <option value="click">지판을 눌러서</option>
+              <option value="mic">기타로 쳐서 (마이크)</option>
+            </select>
+            <label class="check"><input type="checkbox" id="g-gt-timed"> 템포에 맞춰 넘어가기</label>
+            <span class="g-gt-msg" id="g-gt-msg"></span>
+          </div>
+          <div class="g-flow" id="g-flow"></div>
         </div>
       </div>
 
@@ -233,6 +287,8 @@
   <script src="chords.js"></script>
   <script src="guide.js"></script>
   <script src="scales.js"></script>
+  <script src="ear.js"></script>
+  <script src="metronome.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

@@ -29,6 +29,7 @@
     board: { label: '지판 찍기' },
     piano: { label: '건반 코드' },
     scale: { label: '스케일' },
+    ear:   { label: '귀 훈련' },
     guide: { label: '코드 가이드' },
   };
   const MIC_FREE = new Set(['board', 'piano']); // 화면을 눌러서 답하는 모드
@@ -90,7 +91,8 @@
   let nextTimer = null;
   let guide = null;       // 코드 가이드 (guide.js)
   let scales = null;      // 스케일 연습 (scales.js)
-  const PAGES = new Set(['guide', 'scale']); // 문제를 내지 않는 탭
+  const PAGES = new Set(['guide', 'scale', 'ear']); // 자체 화면을 가진 탭 (guide.js, scales.js, ear.js)
+  const pages = {};       // 탭 id → 모듈
   let pianoChord = null;  // 가이드에서 건반에 보여줄 코드
 
   const audio = { ctx: null, stream: null, analyser: null, buf: null, chromaAnalyser: null, spectrum: null, chroma: new Float32Array(12), timer: 0 };
@@ -334,6 +336,7 @@
   // ---------- 단음 판정 ----------
   function onStableNote(midi) {
     if (settings.drill === 'scale') { scales.onNote(midi); return; }
+    if (settings.drill === 'guide') { guide.onNote(midi); return; }
     if (phase !== 'ask' || !question) return;
     if (settings.drill === 'note') judgeNote(midi);
     else if (settings.drill === 'tones') judgeTone(midi);
@@ -538,6 +541,33 @@
     nextTimer = setTimeout(nextQuestion, isChordDrill() ? CHORD_DELAY_MS + 600 : REVEAL_DELAY_MS);
   }
 
+  // 귀 훈련처럼 자체 문제를 내는 탭의 결과를 위쪽 점수에 반영
+  function scoreExternal(ok, clean = false, ms = 0) {
+    if (ok) {
+      session.correct++;
+      session.streak = clean ? session.streak + 1 : 0;
+      if (clean) { session.cleanMs += ms; session.cleanCount++; }
+    } else {
+      session.wrong++;
+      session.streak = 0;
+    }
+    updateStats();
+  }
+
+  // 스케일·가이드톤 연습에서 쓰는 마이크
+  async function micStart() {
+    if (!audio.ctx) await startAudio();
+    document.body.classList.add('listening');
+  }
+  function micStop() {
+    document.body.classList.remove('listening');
+    if (!audio.ctx) return;
+    stopAudio();
+    el.level.style.width = '0';
+    el.detNote.textContent = '–';
+    el.needle.style.opacity = 0;
+  }
+
   function updateStats() {
     el.stCorrect.textContent = session.correct;
     el.stWrong.textContent = session.wrong;
@@ -703,7 +733,7 @@
   function onBoardClick(s, f) {
     const midi = OPEN_MIDI[s] + f;
     playTone(midi, 0, 1.6, 0.2);
-    if (settings.drill === 'scale') { scales.onClick(s, f, midi); return; }
+    if (PAGES.has(settings.drill)) { pages[settings.drill].onClick(s, f, midi); return; }
     if (!isBoard() || phase !== 'ask' || !question) return;
     if (isChordDrill()) boardChord(s, f, midi);
     else boardNote(s, f, midi);
@@ -938,7 +968,7 @@
     }
 
     // 지판 찍기 모드: 칸마다 투명한 클릭 영역
-    if (isBoard() || settings.drill === 'scale') {
+    if (isBoard() || PAGES.has(settings.drill)) {
       for (const s of STRINGS) {
         for (let f = 0; f <= n; f++) {
           const x = f === 0 ? FB.left - 44 : FB.left + (f - 1) * FB.fretW;
@@ -960,17 +990,13 @@
       if (!btn || btn.dataset.drill === settings.drill) return;
       const from = settings.drill;
       const fromMicFree = MIC_FREE.has(from) || PAGES.has(from);
-      if (from === 'guide') guide.deactivate();
-      if (from === 'scale') scales.deactivate();
+      if (PAGES.has(from)) pages[from].deactivate();
       settings.drill = btn.dataset.drill;
       persist();
       applyDrill();
-      if (settings.drill === 'guide') {
+      if (PAGES.has(settings.drill)) {
         stopSession('');
-        guide.activate();
-      } else if (settings.drill === 'scale') {
-        stopSession('');
-        scales.activate();
+        pages[settings.drill].activate();
       } else if (MIC_FREE.has(settings.drill)) {
         if (audio.ctx) stopSession(); // 마이크는 필요 없으니 끔
         startClickDrill();
@@ -992,24 +1018,28 @@
         const shape = FretChords.shapeOf(rootPc, type, form);
         return shape ? shape.filter((p) => p.f !== null).map((p) => OPEN_MIDI[p.s] + p.f) : null;
       },
+      chime: playChime,
+      startMic: micStart,
+      stopMic: micStop,
     });
     scales = FretScales.init({
       settings, persist, noteName, noteNameWithOctave, renderBoard, playTone,
       accFor: (pc, type) => pickAccidental(pc, type, true),
       chime: playChime,
-      startMic: async () => { if (!audio.ctx) await startAudio(); },
-      stopMic: () => {
-        if (!audio.ctx) return;
-        stopAudio();
-        el.level.style.width = '0';
-        el.detNote.textContent = '–';
-        el.needle.style.opacity = 0;
-      },
+      startMic: micStart,
+      stopMic: micStop,
     });
+    const ear = FretEar.init({
+      settings, persist, playTone, noteNameWithOctave, renderBoard,
+      accFor: (pc, type) => pickAccidental(pc, type, true),
+      score: scoreExternal,
+    });
+    Object.assign(pages, { guide, scale: scales, ear });
+    FretMetronome.init({ settings, persist });
+
     applyDrill();
     if (MIC_FREE.has(settings.drill)) startClickDrill();
-    if (settings.drill === 'guide') guide.activate();
-    if (settings.drill === 'scale') scales.activate();
+    if (PAGES.has(settings.drill)) pages[settings.drill].activate();
 
     el.board.addEventListener('pointerdown', (e) => {
       const hit = e.target.closest('.fb-hit');
@@ -1104,7 +1134,7 @@
       renderPiano();
       persist();
       if (settings.drill === 'guide') guide.render();
-      else if (settings.drill === 'scale') scales.render();
+      else if (PAGES.has(settings.drill)) pages[settings.drill].render();
       else if (requeue && phase !== 'idle') nextQuestion();
       else renderBoard();
     };
@@ -1182,6 +1212,8 @@
   document.addEventListener('keydown', (e) => {
     if (e.target.matches('input, select, textarea') || e.repeat) return;
     if (e.code === 'Space' && settings.drill === 'guide') { e.preventDefault(); guide.togglePlay(); }
+    else if (e.code === 'Space' && settings.drill === 'ear') { e.preventDefault(); pages.ear.replay(); }
+    else if (e.code === 'KeyH' && settings.drill === 'ear') pages.ear.giveUp();
     else if (e.code === 'Space') { e.preventDefault(); skip(); }
     else if (e.code === 'KeyH') giveHint();
     else if (e.code === 'Enter' && !audio.ctx) toggle();

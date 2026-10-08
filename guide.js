@@ -24,7 +24,7 @@
     minor: ['I', '♭II', 'II', 'III', '♯III', 'IV', '♯IV', 'V', 'VI', '♯VI', 'VII', '♯VII'],
   };
   const NUMERAL_SUFFIX = {
-    maj: '', min: '', dom7: '7', maj7: 'maj7', min7: '7', sus2: 'sus2', sus4: 'sus4', dim: '°', aug: '+', m7b5: 'ø7',
+    maj: '', min: '', dom7: '7', maj7: 'M7', min7: '7', sus2: 'sus2', sus4: 'sus4', dim: '°', aug: '+', m7b5: 'ø7',
   };
 
   // 진행 프리셋: 키의 으뜸음 기준 [반음, 종류]
@@ -43,6 +43,38 @@
   ];
 
   const MAX_PROG = 32;
+  const OPEN_MIDI = { 1: 64, 2: 59, 3: 55, 4: 50, 5: 45, 6: 40 };
+  // 가이드톤: 코드 성격을 정하는 3음과 7음 (sus 코드는 3음 자리의 2·4음)
+  const GUIDE_ROLES = new Set(['3', '♭3', '2', '4', '7', '♭7']);
+  const isSeventh = (role) => role.includes('7');
+
+  function guideTones(chord) {
+    return chord.tones.filter((t) => GUIDE_ROLES.has(t.role));
+  }
+
+  // 반음 단위의 가장 가까운 이동 (-6 ~ +5)
+  function interval(x, y) {
+    let d = (((y - x) % 12) + 12) % 12;
+    if (d > 6) d -= 12;
+    return d;
+  }
+
+  // 앞 코드의 가이드톤이 다음 코드의 어느 음으로 가장 가깝게 이어지는지
+  function voiceLead(a, b) {
+    if (!a.length || !b.length) return [];
+    if (a.length === 2 && b.length === 2) {
+      const straight = Math.abs(interval(a[0].pc, b[0].pc)) + Math.abs(interval(a[1].pc, b[1].pc));
+      const crossed = Math.abs(interval(a[0].pc, b[1].pc)) + Math.abs(interval(a[1].pc, b[0].pc));
+      return straight <= crossed ? [[a[0], b[0]], [a[1], b[1]]] : [[a[0], b[1]], [a[1], b[0]]];
+    }
+    return a.map((x) => [x, b.reduce((best, y) => (Math.abs(interval(x.pc, y.pc)) < Math.abs(interval(x.pc, best.pc)) ? y : best))]);
+  }
+
+  function moveText(d) {
+    if (d === 0) return '유지';
+    const size = Math.abs(d) === 1 ? '반음' : Math.abs(d) === 2 ? '온음' : `${Math.abs(d)}반음`;
+    return `${size}${d < 0 ? '↓' : '↑'}`;
+  }
   const $ = (id) => document.getElementById(id);
 
   function init(ctx) {
@@ -68,7 +100,10 @@
       listen: $('g-listen'), add: $('g-add'), setKey: $('g-setkey'),
       play: $('g-play'), loop: $('g-loop'), bpm: $('g-bpm'), beats: $('g-beats'), preset: $('g-preset'), clear: $('g-clear'),
       prog: $('g-prog'), count: $('g-prog-count'),
+      gt: $('g-gt'), gtInput: $('g-gt-input'), gtTimed: $('g-gt-timed'), gtMsg: $('g-gt-msg'), flow: $('g-flow'), legend: $('g-legend'),
     };
+    // 가이드톤 연습 상태
+    const gt = { on: false, input: 'click', i: 0, need: new Set(), total: 0, marks: [], results: [], mistakes: 0, wrong: new Set(), timers: [] };
 
     function save() {
       settings.guide = { key: st.key, chord: st.chord, form: st.form, prog: st.prog, sevenths: st.sevenths, bpm: st.bpm, beats: st.beats, loop: st.loop };
@@ -123,7 +158,7 @@
     function select(chord, { sound = true } = {}) {
       st.chord = { rootPc: chord.rootPc, type: chord.type };
       // 고른 운지가 없는 코드면 있는 운지로
-      if (st.form !== 'all' && !FretChords.shapeOf(chord.rootPc, chord.type, st.form)) {
+      if (!['all', 'guide'].includes(st.form) && !FretChords.shapeOf(chord.rootPc, chord.type, st.form)) {
         st.form = ['open', 'a', 'e'].find((f) => FretChords.shapeOf(chord.rootPc, chord.type, f)) || 'all';
       }
       if (sound) strum(st.chord);
@@ -144,7 +179,7 @@
     }
 
     function strum(chord) {
-      const midis = ctx.voicing(chord.rootPc, chord.type, st.form === 'all' ? 'open' : st.form)
+      const midis = ctx.voicing(chord.rootPc, chord.type, ['all', 'guide'].includes(st.form) ? 'open' : st.form)
         || ctx.voicing(chord.rootPc, chord.type, 'open')
         || FretChords.TYPES[chord.type].tones.map(([semi]) => 48 + chord.rootPc + semi);
       midis.forEach((m, i) => ctx.playTone(m, i * 0.035, 1.6, 0.12));
@@ -174,6 +209,117 @@
       el.play.textContent = '■ 정지';
       select(st.prog[play.i]);
       play.timer = setTimeout(step, (60000 / st.bpm) * st.beats);
+    }
+
+    // ---------- 가이드톤 연습 ----------
+    function gtMsg(text, cls = '') {
+      el.gtMsg.textContent = text;
+      el.gtMsg.className = `g-gt-msg ${cls}`;
+    }
+
+    async function startGT() {
+      if (!st.prog.length) { gtMsg('먼저 코드 진행을 만들어 주세요', 'bad'); return; }
+      stopPlay();
+      stopGT(false);
+      gt.input = el.gtInput.value;
+      if (gt.input === 'mic') {
+        try {
+          await ctx.startMic();
+        } catch (err) {
+          gtMsg(err.name === 'NotAllowedError' ? '마이크 권한이 거부됐어요' : `마이크를 열 수 없어요: ${err.message}`, 'bad');
+          return;
+        }
+      }
+      gt.on = true;
+      gt.results = [];
+      gt.mistakes = 0;
+      el.gt.textContent = '■ 그만';
+      enterChord(0);
+    }
+
+    function stopGT(showMsg = true) {
+      gt.timers.forEach(clearTimeout);
+      gt.timers = [];
+      const was = gt.on;
+      if (was && gt.input === 'mic') ctx.stopMic();
+      gt.on = false;
+      gt.marks = [];
+      el.gt.textContent = '🎯 가이드톤 연습';
+      if (was && showMsg) gtMsg('그만뒀어요');
+      if (active) render();
+    }
+
+    function enterChord(i) {
+      gt.timers.forEach(clearTimeout);
+      gt.timers = [];
+      gt.i = i;
+      const c = st.prog[i];
+      const chord = build(c.rootPc, c.type);
+      const tones = guideTones(chord);
+      gt.need = new Set(tones.map((t) => t.pc));
+      gt.total = gt.need.size;
+      gt.marks = [];
+      gt.wrong = new Set();
+      // 마이크로 연습할 땐 코드 소리를 내지 않음 (마이크가 그 소리를 들으면 안 되므로)
+      select(c, { sound: gt.input === 'click' });
+      gtMsg(`${chord.name}: ${tones.map((t) => t.role).join(' · ')}음을 ${gt.input === 'mic' ? '기타로 쳐보세요' : '지판에서 눌러 보세요'}`);
+      if (el.gtTimed.checked) {
+        const beat = 60000 / st.bpm;
+        for (let b = 0; b < st.beats; b++) gt.timers.push(setTimeout(() => FretMetronome.click(b === 0), b * beat));
+        gt.timers.push(setTimeout(finishChord, beat * st.beats));
+      }
+    }
+
+    function finishChord() {
+      gt.results[gt.i] = gt.need.size === 0 ? 'ok' : gt.need.size < gt.total ? 'half' : 'miss';
+      advance();
+    }
+
+    function advance() {
+      if (gt.i + 1 < st.prog.length) { enterChord(gt.i + 1); return; }
+      if (el.gtTimed.checked && st.loop) { gt.results = []; enterChord(0); return; }
+      const ok = gt.results.filter((r) => r === 'ok').length;
+      const mistakes = gt.mistakes;
+      stopGT(false);
+      gtMsg(`완료! ${st.prog.length}개 코드 중 ${ok}개 완벽 · 실수 ${mistakes}번`, 'good');
+      ctx.chime();
+    }
+
+    function hit(pc, cells) {
+      if (!gt.on) return;
+      const c = st.prog[gt.i];
+      const chord = build(c.rootPc, c.type);
+      const tone = guideTones(chord).find((t) => t.pc === pc);
+      if (tone) {
+        if (!gt.need.has(pc)) return; // 이미 찾은 음
+        gt.need.delete(pc);
+        gt.marks.push(...cells.map((cell) => ({ ...cell, label: tone.name, cls: isSeventh(tone.role) ? 'hint' : 'tone', still: true })));
+        if (!gt.need.size) {
+          gtMsg(`${chord.name} 완성!`, 'good');
+          if (!el.gtTimed.checked) {
+            gt.results[gt.i] = 'ok';
+            gt.timers.push(setTimeout(advance, 600));
+          }
+        } else {
+          gtMsg(`${tone.role}음 ${tone.name} ✓`);
+        }
+        render();
+        return;
+      }
+      if (!gt.wrong.has(pc)) { gt.wrong.add(pc); gt.mistakes++; }
+      const other = chord.tones.find((t) => t.pc === pc);
+      gtMsg(other
+        ? `${other.name}는 ${other.role === 'R' ? '근' : other.role}음 — 가이드톤(3·7음)이 아니에요`
+        : `${ctx.noteName(pc)} — ${chord.name}의 구성음이 아니에요`, 'bad');
+    }
+
+    function positions(midi) {
+      const out = [];
+      for (const [s, open] of Object.entries(OPEN_MIDI)) {
+        const f = midi - open;
+        if (f >= 0 && f <= 15) out.push({ s: +s, f, midi });
+      }
+      return out;
     }
 
     // ---------- 그리기 ----------
@@ -228,16 +374,33 @@
       const chord = build(st.chord.rootPc, st.chord.type);
       el.name.textContent = chord.name;
       el.numeral.textContent = `${keyName(st.key)} 키에서 ${numeral(st.chord.rootPc, st.chord.type)}`;
-      el.tones.innerHTML = chord.tones.map((t) =>
-        `<div class="tone found${t.role === 'R' ? ' root' : ''}"><small>${t.role}</small><b>${t.name}</b></div>`).join('');
+      const guideView = gt.on || st.form === 'guide';
+      el.tones.innerHTML = chord.tones.map((t) => {
+        const isGuide = GUIDE_ROLES.has(t.role);
+        const hidden = gt.on && isGuide && gt.need.has(t.pc); // 연습 중엔 아직 못 찾은 가이드톤은 가림
+        const cls = hidden ? 'tone' : `tone found${t.role === 'R' ? ' root' : ''}${guideView && !isGuide ? ' dim' : ''}`;
+        return `<div class="${cls}"><small>${t.role}</small><b>${hidden ? '?' : t.name}</b></div>`;
+      }).join('');
+      el.legend.hidden = !guideView;
       el.types.innerHTML = Object.entries(FretChords.TYPES).map(([id, t]) =>
         `<button type="button" data-type="${id}" class="${id === st.chord.type ? 'on' : ''}">${t.label}</button>`).join('');
-      const forms = [...Object.entries(FretChords.FORMS).map(([id, f]) => [id, f.label]), ['all', '구성음 전체']];
+      const forms = [...Object.entries(FretChords.FORMS).map(([id, f]) => [id, f.label]), ['all', '구성음 전체'], ['guide', '가이드톤 (3·7음)']];
       el.forms.innerHTML = forms.map(([id, label]) => {
-        const ok = id === 'all' || FretChords.shapeOf(st.chord.rootPc, st.chord.type, id);
+        const ok = id === 'all' || id === 'guide' || FretChords.shapeOf(st.chord.rootPc, st.chord.type, id);
         return `<button type="button" data-form="${id}" class="${id === st.form ? 'on' : ''}"${ok ? '' : ' disabled'}>${label}</button>`;
       }).join('');
 
+      if (gt.on) {
+        ctx.showOnPiano({ rootPc: chord.rootPc, tones: guideTones(chord).filter((t) => !gt.need.has(t.pc)) });
+        ctx.renderBoard(gt.marks);
+        return;
+      }
+      if (st.form === 'guide') {
+        const g = guideTones(chord);
+        ctx.showOnPiano({ rootPc: chord.rootPc, tones: g });
+        ctx.renderBoard(ctx.rangeMarks({ tones: g }).map((m) => ({ ...m, cls: g.find((t) => t.name === m.label && isSeventh(t.role)) ? 'hint' : 'tone' })));
+        return;
+      }
       ctx.showOnPiano(chord);
       const shape = st.form !== 'all' && FretChords.shapeOf(st.chord.rootPc, st.chord.type, st.form);
       ctx.renderBoard(shape ? ctx.shapeMarks(chord, shape, st.form) : ctx.rangeMarks(chord));
@@ -247,11 +410,35 @@
       el.count.textContent = st.prog.length ? `${st.prog.length}개 · ${keyName(st.key)} 키` : '';
       el.prog.innerHTML = !st.prog.length
         ? '<p class="g-empty">5도권 원이나 위의 코드를 누르면 여기에 차례로 쌓여요</p>'
-        : st.prog.map((c, i) =>
-          `<div class="g-step${i === play.i ? ' playing' : ''}" data-i="${i}">` +
-          `<small>${numeral(c.rootPc, c.type)}</small><b>${build(c.rootPc, c.type).name}</b>` +
-          `<button type="button" class="g-del" data-del="${i}" aria-label="삭제">×</button></div>`).join('');
+        : st.prog.map((c, i) => {
+          const chord = build(c.rootPc, c.type);
+          const now = i === play.i || (gt.on && i === gt.i);
+          const result = gt.results[i] ? ` ${gt.results[i]}` : '';
+          // 연습 중에는 가이드톤 답을 숨김
+          const gts = gt.on ? '' : `<em>${guideTones(chord).map((t) => t.name).join('·')}</em>`;
+          return `<div class="g-step${now ? ' playing' : ''}${result}" data-i="${i}">` +
+            `<small>${numeral(c.rootPc, c.type)}</small><b>${chord.name}</b>${gts}` +
+            `<button type="button" class="g-del" data-del="${i}" aria-label="삭제">×</button></div>`;
+        }).join('');
       el.play.disabled = !st.prog.length;
+      el.gt.disabled = !st.prog.length;
+      renderFlow();
+    }
+
+    // 가이드톤 흐름: 코드가 바뀔 때 3·7음이 어디로 움직이는지
+    function renderFlow() {
+      if (st.prog.length < 2 || gt.on) { el.flow.innerHTML = ''; return; }
+      const rows = [];
+      for (let i = 0; i + 1 < st.prog.length; i++) {
+        const a = build(st.prog[i].rootPc, st.prog[i].type);
+        const b = build(st.prog[i + 1].rootPc, st.prog[i + 1].type);
+        const moves = voiceLead(guideTones(a), guideTones(b)).map(([x, y]) => {
+          const d = interval(x.pc, y.pc);
+          return `<span class="${Math.abs(d) <= 1 ? 'smooth' : ''}">${x.name}(${x.role}) → ${y.name}(${y.role}) <small>${moveText(d)}</small></span>`;
+        });
+        rows.push(`<div class="g-flow-row"><b>${a.name} → ${b.name}</b>${moves.join('')}</div>`);
+      }
+      el.flow.innerHTML = `<div class="g-title">가이드톤 흐름 <small>반음·유지로 이어지는 선이 부드러운 진행</small></div>${rows.join('')}`;
     }
 
     function renderKeySelect() {
@@ -324,6 +511,7 @@
     el.prog.addEventListener('click', (e) => {
       const del = e.target.closest('.g-del');
       if (del) {
+        if (gt.on) return;
         st.prog.splice(+del.dataset.del, 1);
         if (play.on && play.i >= st.prog.length) play.i = -1;
         save();
@@ -331,13 +519,14 @@
         return;
       }
       const stepEl = e.target.closest('.g-step');
-      if (stepEl) select(st.prog[+stepEl.dataset.i]);
+      if (stepEl && !gt.on) select(st.prog[+stepEl.dataset.i]);
     });
     el.play.addEventListener('click', () => (play.on ? stopPlay() : startPlay()));
     el.loop.addEventListener('change', () => { st.loop = el.loop.checked; save(); });
     el.bpm.addEventListener('change', () => { st.bpm = +el.bpm.value; save(); });
     el.beats.addEventListener('change', () => { st.beats = +el.beats.value; save(); });
-    el.clear.addEventListener('click', () => { stopPlay(); st.prog = []; save(); render(); });
+    el.clear.addEventListener('click', () => { stopPlay(); stopGT(false); gt.results = []; st.prog = []; save(); render(); });
+    el.gt.addEventListener('click', () => (gt.on ? stopGT() : startGT()));
     el.preset.addEventListener('change', () => {
       const p = PRESETS[+el.preset.value];
       el.preset.value = '';
@@ -350,9 +539,11 @@
 
     return {
       activate() { active = true; render(); },
-      deactivate() { stopPlay(); active = false; },
+      deactivate() { stopPlay(); stopGT(false); active = false; },
       render,
-      togglePlay() { if (play.on) stopPlay(); else startPlay(); },
+      togglePlay() { if (gt.on) return; if (play.on) stopPlay(); else startPlay(); },
+      onNote(midi) { if (gt.on && gt.input === 'mic') hit(midi % 12, positions(midi)); },
+      onClick(s, f, midi) { if (gt.on && gt.input === 'click') hit(midi % 12, [{ s, f, midi }]); },
     };
   }
 

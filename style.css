@@ -235,6 +235,8 @@ input[type="range"] { accent-color: var(--accent); }
 /* ---------- 모드 탭 ---------- */
 .tabs {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 4px;
   padding: 4px;
   background: var(--panel-2);
@@ -507,3 +509,80 @@ body[data-drill="scale"] .piano { display: none; }
 .fb-mark.next circle { fill: var(--hint); }
 .fb-mark.next { animation: nextpulse 1s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
 @keyframes nextpulse { 50% { transform: scale(1.25); } }
+
+/* ---------- 메트로놈 ---------- */
+.metro {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 10px 16px;
+  background: var(--panel);
+  border-radius: var(--radius);
+  font-size: 14px;
+}
+.metro select, .metro input[type="number"] { padding: 5px 8px; font-size: 14px; }
+.m-toggle { width: 38px; height: 38px; padding: 0; border-radius: 50%; font-size: 14px; }
+.m-toggle.on { background: var(--accent); color: #1a1408; border-color: var(--accent); }
+.m-label { color: var(--muted); font-weight: 700; }
+.m-bpm { display: flex; align-items: center; gap: 4px; }
+.m-bpm button { padding: 4px 10px; }
+.m-bpm input { width: 64px; text-align: center; }
+.m-bpm small { color: var(--muted); }
+.m-dots { display: flex; gap: 5px; }
+.m-dots i { width: 10px; height: 10px; border-radius: 50%; background: var(--panel-2); border: 1px solid var(--line); }
+.m-dots i.first { border-color: var(--muted); }
+.m-dots i.on { background: var(--good); border-color: var(--good); }
+.m-dots i.on.first { background: var(--accent); border-color: var(--accent); }
+.m-trainer { margin-left: 8px; }
+.m-max { display: flex; align-items: center; gap: 4px; color: var(--muted); }
+.m-max input { width: 64px; }
+.m-info { color: var(--accent); font-size: 13px; }
+
+/* ---------- 귀 훈련 ---------- */
+.ear { display: none; width: 100%; gap: 14px; justify-items: center; }
+body[data-drill="ear"] .ear { display: grid; }
+body[data-drill="ear"] .prompt,
+body[data-drill="ear"] .controls,
+body[data-drill="ear"] .tuner,
+body[data-drill="ear"] .chroma,
+body[data-drill="ear"] .piano { display: none; }
+.e-pick-wrap { width: 100%; }
+.e-note { color: var(--muted); font-size: 13px; }
+.e-question { font-size: 26px; font-weight: 800; margin-top: 6px; }
+.e-tools { justify-content: center; }
+.e-answers {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 8px;
+  width: min(720px, 100%);
+}
+.e-answers:empty { display: none; }
+.e-answers button { padding: 14px 8px; font-size: 16px; font-weight: 700; }
+.e-answers button small { display: block; font-size: 11px; font-weight: 400; color: var(--muted); }
+.e-answers button.tried { border-color: var(--bad); color: var(--bad); opacity: .7; }
+.e-answers button.right { border-color: var(--good); background: #1d3a2b; color: var(--good); }
+.e-msg { min-height: 1.5em; font-size: 17px; text-align: center; color: var(--muted); }
+.e-msg.good { color: var(--good); font-weight: 700; }
+.e-msg.bad { color: var(--bad); font-weight: 600; }
+.e-msg.reveal { color: var(--hint); font-weight: 600; }
+
+/* ---------- 가이드톤 ---------- */
+body.listening[data-drill="guide"] .tuner { display: grid; }
+.tone.dim { opacity: .35; }
+.g-legend { font-size: 12px; color: var(--muted); }
+.g-step em { font-style: normal; font-size: 11px; color: var(--hint); }
+.g-step.ok { border-color: var(--good); background: #1d3a2b; }
+.g-step.half { border-color: var(--accent); }
+.g-step.miss { border-color: var(--bad); }
+.g-gt-row { margin-top: 4px; }
+.g-gt-msg { font-size: 14px; color: var(--muted); }
+.g-gt-msg.good { color: var(--good); font-weight: 700; }
+.g-gt-msg.bad { color: var(--bad); }
+.g-flow { display: grid; gap: 6px; }
+.g-flow:empty { display: none; }
+.g-flow-row { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: baseline; font-size: 14px; }
+.g-flow-row b { min-width: 110px; }
+.g-flow-row span { color: var(--muted); }
+.g-flow-row span.smooth { color: var(--good); }
+.g-flow-row small { font-size: 12px; margin-left: 2px; }

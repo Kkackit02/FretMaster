@@ -4,10 +4,10 @@
 
   // tones: [근음에서 반음 수, 글자 간격(도수-1), 역할 표시]
   const TYPES = {
-    maj:  { suffix: '',     label: 'Major', tones: [[0, 0, 'R'], [4, 2, '3'], [7, 4, '5']] },
+    maj:  { suffix: '',     label: 'M',     tones: [[0, 0, 'R'], [4, 2, '3'], [7, 4, '5']] },
     min:  { suffix: 'm',    label: 'm',     tones: [[0, 0, 'R'], [3, 2, '♭3'], [7, 4, '5']] },
     dom7: { suffix: '7',    label: '7',     tones: [[0, 0, 'R'], [4, 2, '3'], [7, 4, '5'], [10, 6, '♭7']] },
-    maj7: { suffix: 'maj7', label: 'maj7',  tones: [[0, 0, 'R'], [4, 2, '3'], [7, 4, '5'], [11, 6, '7']] },
+    maj7: { suffix: 'M7',   label: 'M7',    tones: [[0, 0, 'R'], [4, 2, '3'], [7, 4, '5'], [11, 6, '7']] },
     min7: { suffix: 'm7',   label: 'm7',    tones: [[0, 0, 'R'], [3, 2, '♭3'], [7, 4, '5'], [10, 6, '♭7']] },
     sus2: { suffix: 'sus2', label: 'sus2',  tones: [[0, 0, 'R'], [2, 1, '2'], [7, 4, '5']] },
     sus4: { suffix: 'sus4', label: 'sus4',  tones: [[0, 0, 'R'], [5, 3, '4'], [7, 4, '5']] },
