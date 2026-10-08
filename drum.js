@@ -7,7 +7,7 @@
   const BEAMS = { 24: 0, 12: 1, 8: 1, 6: 2, 4: 2, 3: 3 };
   const TUPLET = { 8: 3, 4: 6 };
 
-  // 토큰: [꾸밈음(소문자)][손][>액센트][:길이]  예) lR>  llR  R>:8  /  unit = 기본 길이
+  // 토큰: [꾸밈음(소문자)][손 R·L 또는 발 K][>액센트][:길이]  예) lR>  llR  R>:8  K  /  unit = 기본 길이
   const RUDIMENTS = [
     { id: 'single', cat: '롤', name: '싱글 스트로크 롤', unit: 16, pattern: 'R L R L R L R L',
       desc: '양손을 번갈아 한 번씩. 모든 루디먼트의 기본이라 두 손 소리 크기를 똑같이 맞추는 게 목표예요.' },
@@ -42,12 +42,41 @@
 
     { id: 'drag', cat: '드래그', name: '드래그 (러프)', unit: 4, pattern: 'llR rrL llR rrL',
       desc: '같은 손 꾸밈음 두 개(더블처럼 튕겨서) + 반대 손 주음. 꾸밈음은 아주 작게.' },
+
+    { id: 'rlk', cat: '손발 조합', name: '손손발 셋잇단 (RLK)', unit: '8t', pattern: 'R> L K R> L K',
+      desc: '오른손-왼손-킥을 셋잇단으로. 필인과 솔로에서 가장 많이 쓰는 손발 조합이에요. 킥이 손만큼 또렷하게 들리게.' },
+    { id: 'rlrk', cat: '손발 조합', name: 'RLRK', unit: 16, pattern: 'R> L R K R> L R K',
+      desc: '16분음표 네 개 중 마지막을 킥으로. 박의 첫 음이 항상 오른손이라 박자를 잡기 쉬워요.' },
+    { id: 'rllk', cat: '손발 조합', name: 'RLLK', unit: 16, pattern: 'R> L L K R> L L K',
+      desc: '오른손 하나, 왼손 더블, 킥. 왼손 더블이 고르게 나오는지 들어 보세요.' },
+    { id: 'rklk', cat: '손발 조합', name: 'RKLK', unit: 16, pattern: 'R> K L K R> K L K',
+      desc: '손 사이마다 킥. 킥이 16분음표 뒷박마다 들어가서 발 연습에 좋아요.' },
+    { id: 'gospel', cat: '손발 조합', name: '가스펠 식스 (RLRLKK)', unit: '16t', pattern: 'R> L R L K K R> L R L K K',
+      desc: '여섯잇단으로 손 네 번 + 킥 두 번. 가스펠·퓨전 드러머들이 즐겨 쓰는 빠른 필인 패턴이에요.' },
   ];
+
+  // 기존 루디먼트 밑에 깔 킥 위치
+  const KICK_MODES = {
+    none: '킥 없음',
+    beat: '매 박 (4분음표)',
+    half: '1·3박',
+    accent: '액센트마다',
+  };
+
+  function applyKick(notes, mode) {
+    for (const n of notes) {
+      n.kick = n.hand !== 'K' && (
+        (mode === 'beat' && n.t % 24 === 0) ||
+        (mode === 'half' && n.t % 48 === 0) ||
+        (mode === 'accent' && n.accent));
+    }
+    return notes;
+  }
 
   function parse(r) {
     let t = 0;
     return r.pattern.split(/\s+/).map((tok) => {
-      const m = tok.match(/^([rl]*)([RL])(>?)(?::(\w+))?$/);
+      const m = tok.match(/^([rl]*)([RLK])(>?)(?::(\w+))?$/);
       const ticks = TICKS[m[4] || r.unit];
       const note = { graces: m[1].toUpperCase(), hand: m[2], accent: !!m[3], ticks, t };
       t += ticks;
@@ -57,6 +86,7 @@
 
   // ---------- 악보 그리기 ----------
   const LINE_Y = 60;
+  const KICK_Y = LINE_Y + 13; // 킥은 줄 아래
   const STEM_TOP = 20;
 
   function head(x, y, scale = 1, cls = '') {
@@ -112,13 +142,18 @@
             parts.push(`<line class="d-beam-thin" x1="${gx[0] + 3.4}" y1="${LINE_Y - 26 + off}" x2="${gx[gx.length - 1] + 3.4}" y2="${LINE_Y - 26 + off}"/>`);
           }
         }
-        gx.forEach((g, k) => parts.push(`<text class="d-stick grace" x="${g}" y="${LINE_Y + 38}">${n.graces[k].toLowerCase()}</text>`));
+        gx.forEach((g, k) => parts.push(`<text class="d-stick grace" x="${g}" y="${LINE_Y + 48}">${n.graces[k].toLowerCase()}</text>`));
       }
-      // 음표
-      parts.push(`<g class="d-note" data-i="${i}">${head(n.x, LINE_Y, 1, n.accent ? 'acc' : '')}` +
-        `<line class="d-stem" x1="${sx}" y1="${LINE_Y - 2}" x2="${sx}" y2="${STEM_TOP}"/></g>`);
-      if (n.accent) parts.push(`<text class="d-accent" x="${n.x}" y="${LINE_Y + 21}">&gt;</text>`);
-      parts.push(`<text class="d-stick${n.hand === 'R' ? ' r' : ' l'}" data-i="${i}" x="${n.x}" y="${LINE_Y + 38}">${n.hand}</text>`);
+      // 음표: 스네어는 줄 위, 킥은 줄 아래. 킥을 같이 치면 한 기둥에 두 머리
+      const y = n.hand === 'K' ? KICK_Y : LINE_Y;
+      const low = n.kick ? KICK_Y : y;
+      parts.push(`<g class="d-note" data-i="${i}">${head(n.x, y, 1, n.hand === 'K' ? 'kick' : '')}` +
+        `${n.kick ? head(n.x, KICK_Y, 1, 'kick') : ''}` +
+        `<line class="d-stem" x1="${sx}" y1="${low - 2}" x2="${sx}" y2="${STEM_TOP}"/></g>`);
+      if (n.accent) parts.push(`<text class="d-accent" x="${n.x}" y="${LINE_Y + 30}">&gt;</text>`);
+      const handCls = { R: ' r', L: ' l', K: ' k' }[n.hand];
+      parts.push(`<text class="d-stick${handCls}" data-i="${i}" x="${n.x}" y="${LINE_Y + 48}">${n.hand}</text>`);
+      if (n.kick) parts.push(`<text class="d-stick k" data-i="${i}" x="${n.x}" y="${LINE_Y + 64}">K</text>`);
     });
 
     // 빔 / 깃발 / 잇단음표 숫자
@@ -157,7 +192,8 @@
       }
     }
 
-    return `<svg viewBox="0 0 ${width} ${LINE_Y + 50}" style="max-width:${width * 1.5}px" role="img" aria-label="루디먼트 악보">${parts.join('')}</svg>`;
+    const height = LINE_Y + (notes.some((n) => n.kick) ? 72 : 56);
+    return `<svg viewBox="0 0 ${width} ${height}" style="max-width:${width * 1.5}px" role="img" aria-label="루디먼트 악보">${parts.join('')}</svg>`;
   }
 
   // ---------- 소리 ----------
@@ -207,6 +243,32 @@
     osc.stop(time + 0.1);
   }
 
+  // 베이스 드럼: 음높이가 빠르게 떨어지는 사인파 + 짧은 비터 소리
+  function kick(time, level) {
+    const ctx = audio();
+    const osc = ctx.createOscillator();
+    osc.frequency.setValueAtTime(140, time);
+    osc.frequency.exponentialRampToValueAtTime(45, time + 0.12);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(level * 1.2, time);
+    g.gain.exponentialRampToValueAtTime(0.001, time + 0.35);
+    osc.connect(g).connect(ctx.destination);
+    osc.start(time);
+    osc.stop(time + 0.4);
+
+    const src = ctx.createBufferSource();
+    src.buffer = noise;
+    const lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.value = 1200;
+    const ng = ctx.createGain();
+    ng.gain.setValueAtTime(level * 0.25, time);
+    ng.gain.exponentialRampToValueAtTime(0.001, time + 0.02);
+    src.connect(lp).connect(ng).connect(ctx.destination);
+    src.start(time);
+    src.stop(time + 0.03);
+  }
+
   function click(time, accent) {
     const ctx = audio();
     const osc = ctx.createOscillator();
@@ -227,6 +289,7 @@
       bpm: saved.bpm || 80,
       loop: saved.loop ?? true,
       click: saved.click ?? true,
+      kick: saved.kick || 'none',
     };
     const run = { on: false, timer: 0, next: 0, idx: 0, loopStart: 0, visuals: [] };
     let notes = [];
@@ -235,11 +298,11 @@
     const $ = (id) => document.getElementById(id);
     const el = {
       list: $('d-list'), name: $('d-name'), desc: $('d-desc'), score: $('d-score'),
-      play: $('d-play'), bpm: $('d-bpm'), down: $('d-down'), up: $('d-up'), loop: $('d-loop'), click: $('d-click'),
+      play: $('d-play'), bpm: $('d-bpm'), down: $('d-down'), up: $('d-up'), loop: $('d-loop'), click: $('d-click'), kick: $('d-kick'),
     };
 
     function save() {
-      settings.drum = { id: st.id, bpm: st.bpm, loop: st.loop, click: st.click };
+      settings.drum = { id: st.id, bpm: st.bpm, loop: st.loop, click: st.click, kick: st.kick };
       persist();
     }
 
@@ -252,7 +315,10 @@
         `<div class="d-cat"><small>${c}</small>${RUDIMENTS.filter((r) => r.cat === c).map((r) =>
           `<button type="button" data-id="${r.id}" class="${r.id === st.id ? 'on' : ''}">${r.name}</button>`).join('')}</div>`).join('');
       const r = rudiment();
-      notes = parse(r);
+      const linear = r.pattern.includes('K'); // 손발 조합은 이미 킥이 들어 있음
+      notes = applyKick(parse(r), linear ? 'none' : st.kick);
+      el.kick.disabled = linear;
+      el.kick.value = linear ? 'none' : st.kick;
       el.name.textContent = r.name;
       el.desc.textContent = r.desc;
       el.score.innerHTML = drawScore(notes);
@@ -283,7 +349,9 @@
         if (time > ctx.currentTime + 0.15) return;
 
         const level = n.accent ? 1 : 0.42;
-        hit(time, n.hand, level);
+        if (n.hand === 'K') kick(time, n.accent ? 1 : 0.8);
+        else hit(time, n.hand, level);
+        if (n.kick) kick(time, 0.85);
         const graceHand = n.hand === 'R' ? 'L' : 'R';
         n.graces.split('').forEach((g, k) => {
           const before = n.graces.length === 1 ? 0.028 : (n.graces.length - k) * 0.032;
@@ -345,6 +413,15 @@
     el.down.addEventListener('click', () => setBpm(st.bpm - 5));
     el.up.addEventListener('click', () => setBpm(st.bpm + 5));
     el.loop.addEventListener('change', () => { st.loop = el.loop.checked; save(); });
+    el.kick.innerHTML = Object.entries(KICK_MODES).map(([v, t]) => `<option value="${v}">${t}</option>`).join('');
+    el.kick.addEventListener('change', () => {
+      st.kick = el.kick.value; // stop()이 다시 그리면서 선택값을 덮어쓰기 전에 읽음
+      const wasOn = run.on;
+      stop();
+      save();
+      render();
+      if (wasOn) start();
+    });
     el.click.addEventListener('change', () => { st.click = el.click.checked; save(); });
 
     return {

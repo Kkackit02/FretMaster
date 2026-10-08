@@ -630,6 +630,7 @@ body[data-drill="drum"] .settings { display: none; }
 .d-stick { font: 700 14px system-ui; text-anchor: middle; }
 .d-stick.r { fill: #2a6bb0; }
 .d-stick.l { fill: #b4651c; }
+.d-stick.k { fill: #2f8a57; }
 .d-stick.grace { font-size: 10px; fill: #6b6252; }
 .d-note.now ellipse { fill: #e2483a; }
 .d-note.now .d-stem { stroke: #e2483a; }
@@ -639,3 +640,4 @@ body[data-drill="drum"] .settings { display: none; }
 .d-legend b { color: var(--text); }
 .d-legend b.r { color: #6aa8e8; }
 .d-legend b.l { color: #e09a52; }
+.d-legend b.k { color: #5cc48a; }
