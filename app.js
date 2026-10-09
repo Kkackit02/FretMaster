@@ -29,10 +29,21 @@
     board: { label: '지판 찍기' },
     piano: { label: '건반 코드' },
     scale: { label: '스케일' },
+    triad: { label: '트라이어드' },
+    interval: { label: '음정 모양' },
     ear:   { label: '귀 훈련' },
     guide: { label: '코드 가이드' },
-    drum:  { label: '드럼 루디먼트' },
+    jam:   { label: '잼 트랙' },
+    drum:  { label: '드럼' },
   };
+  // 위 줄: 분류, 아래 줄: 그 분류의 탭
+  const GROUPS = [
+    { id: 'guitar', label: '🎸 기타 연습', drills: ['note', 'tones', 'strum', 'board', 'scale', 'triad', 'interval'] },
+    { id: 'theory', label: '🎹 이론·귀', drills: ['piano', 'ear', 'guide'] },
+    { id: 'jam', label: '🎶 합주', drills: ['jam'] },
+    { id: 'drum', label: '🥁 드럼', drills: ['drum'] },
+  ];
+  const groupOf = (drill) => GROUPS.find((g) => g.drills.includes(drill)) || GROUPS[0];
   const MIC_FREE = new Set(['board', 'piano']); // 화면을 눌러서 답하는 모드
   const PIANO_LOW = 60;  // 건반 시작 (C4)
   const PIANO_KEYS = 24; // 두 옥타브
@@ -92,7 +103,7 @@
   let nextTimer = null;
   let guide = null;       // 코드 가이드 (guide.js)
   let scales = null;      // 스케일 연습 (scales.js)
-  const PAGES = new Set(['guide', 'scale', 'ear', 'drum']); // 자체 화면을 가진 탭 (guide.js, scales.js, ear.js, drum.js)
+  const PAGES = new Set(['guide', 'scale', 'ear', 'drum', 'triad', 'interval', 'jam']); // 자체 화면을 가진 탭 (모듈 파일)
   const pages = {};       // 탭 id → 모듈
   let pianoChord = null;  // 가이드에서 건반에 보여줄 코드
 
@@ -957,6 +968,7 @@
     }
 
     for (const m of marks) {
+      if (m.cls === 'spacer') continue; // 지판 길이만 늘리는 표시
       if (m.cls === 'barre') {
         parts.push(`<rect class="fb-barre" x="${fx(m.f) - 8}" y="${sy(m.s1) - 8}" width="16" height="${sy(m.s2) - sy(m.s1) + 16}" rx="8"/>`);
         continue;
@@ -983,16 +995,41 @@
   }
 
   // ---------- 모드 탭 ----------
+  function renderTabs() {
+    const group = groupOf(settings.drill);
+    el.tabs.innerHTML =
+      `<div class="tab-groups">${GROUPS.map((g) =>
+        `<button type="button" data-group="${g.id}" class="${g === group ? 'on' : ''}">${g.label}</button>`).join('')}</div>` +
+      (group.drills.length > 1
+        ? `<div class="tab-drills" role="tablist">${group.drills.map((id) =>
+          `<button type="button" data-drill="${id}" role="tab" class="${id === settings.drill ? 'on' : ''}" aria-selected="${id === settings.drill}">${DRILLS[id].label}</button>`).join('')}</div>`
+        : '');
+  }
+
   function initTabs() {
-    el.tabs.innerHTML = Object.entries(DRILLS).map(([id, d]) =>
-      `<button type="button" data-drill="${id}" role="tab">${d.label}</button>`).join('');
+    renderTabs();
     el.tabs.addEventListener('click', (e) => {
+      const groupBtn = e.target.closest('button[data-group]');
+      if (groupBtn) {
+        // 분류를 바꾸면 그 분류에서 마지막으로 쓴 탭으로
+        const g = GROUPS.find((x) => x.id === groupBtn.dataset.group);
+        const last = settings.lastDrill?.[g.id];
+        switchDrill(g.drills.includes(last) ? last : g.drills[0]);
+        return;
+      }
       const btn = e.target.closest('button[data-drill]');
-      if (!btn || btn.dataset.drill === settings.drill) return;
+      if (btn) switchDrill(btn.dataset.drill);
+    });
+    initPages();
+  }
+
+  function switchDrill(target) {
+      if (!DRILLS[target] || target === settings.drill) return;
       const from = settings.drill;
       const fromMicFree = MIC_FREE.has(from) || PAGES.has(from);
       if (PAGES.has(from)) pages[from].deactivate();
-      settings.drill = btn.dataset.drill;
+      settings.drill = target;
+      settings.lastDrill = { ...settings.lastDrill, [groupOf(target).id]: target };
       persist();
       applyDrill();
       if (PAGES.has(settings.drill)) {
@@ -1009,7 +1046,9 @@
         renderTones();
         renderBoard();
       }
-    });
+  }
+
+  function initPages() {
     guide = FretGuide.init({
       settings, persist, noteName, renderBoard, playTone,
       shapeMarks, rangeMarks,
@@ -1035,7 +1074,18 @@
       accFor: (pc, type) => pickAccidental(pc, type, true),
       score: scoreExternal,
     });
-    Object.assign(pages, { guide, scale: scales, ear, drum: FretDrum.init({ settings, persist }) });
+    const common = {
+      settings, persist, noteName, noteNameWithOctave, renderBoard, playTone,
+      accFor: (pc, type) => pickAccidental(pc, type, true),
+      score: scoreExternal, chime: playChime, startMic: micStart, stopMic: micStop,
+    };
+    Object.assign(pages, {
+      guide, scale: scales, ear,
+      drum: FretDrum.init({ settings, persist }),
+      triad: FretTriads.init(common),
+      interval: FretIntervals.init(common),
+      jam: FretJam.init(common),
+    });
     FretMetronome.init({ settings, persist });
 
     applyDrill();
@@ -1056,11 +1106,7 @@
   }
 
   function applyDrill() {
-    el.tabs.querySelectorAll('button').forEach((b) => {
-      const on = b.dataset.drill === settings.drill;
-      b.classList.toggle('on', on);
-      b.setAttribute('aria-selected', on);
-    });
+    renderTabs();
     document.body.dataset.drill = settings.drill;
     // 모드에 해당하는 설정만 보이기
     document.querySelectorAll('[data-for]').forEach((n) => {
@@ -1215,11 +1261,33 @@
     if (e.code === 'Space' && settings.drill === 'guide') { e.preventDefault(); guide.togglePlay(); }
     else if (e.code === 'Space' && settings.drill === 'ear') { e.preventDefault(); pages.ear.replay(); }
     else if (e.code === 'Space' && settings.drill === 'drum') { e.preventDefault(); pages.drum.toggle(); }
+    else if (e.code === 'Space' && settings.drill === 'jam') { e.preventDefault(); pages.jam.toggle(); }
+    else if (e.code === 'KeyH' && (settings.drill === 'triad' || settings.drill === 'interval')) pages[settings.drill].giveUp();
     else if (e.code === 'KeyH' && settings.drill === 'ear') pages.ear.giveUp();
     else if (e.code === 'Space') { e.preventDefault(); skip(); }
     else if (e.code === 'KeyH') giveHint();
     else if (e.code === 'Enter' && !audio.ctx) toggle();
   });
+
+  // ---------- 앱 설치 (PWA) ----------
+  if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+    navigator.serviceWorker.register('sw.js').catch(() => { /* 오프라인 지원만 빠질 뿐 앱은 그대로 동작 */ });
+  }
+  let installPrompt = null;
+  const installBtn = $('btn-install');
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    installPrompt = e;
+    installBtn.hidden = false;
+  });
+  installBtn.addEventListener('click', async () => {
+    if (!installPrompt) return;
+    installPrompt.prompt();
+    await installPrompt.userChoice;
+    installPrompt = null;
+    installBtn.hidden = true;
+  });
+  window.addEventListener('appinstalled', () => { installBtn.hidden = true; });
 
   initChroma();
   initPiano();

@@ -768,5 +768,8 @@
     };
   }
 
-  global.FretDrum = { init, RUDIMENTS, GROOVES, parse: (r) => parseRudiment(r, 'none'), accentExercise, grooveNotes, readingNotes };
+  global.FretDrum = {
+    init, RUDIMENTS, GROOVES, parse: (r) => parseRudiment(r, 'none'), accentExercise, grooveNotes, readingNotes,
+    sound: { audio, snare, kick, hat }, // 잼 트랙에서 같은 오디오로 반주
+  };
 })(window);

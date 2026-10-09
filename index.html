@@ -4,11 +4,19 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>FretMaster</title>
+  <meta name="description" content="기타 지판·코드·스케일·귀 훈련·잼 트랙·드럼 루디먼트 연습">
+  <meta name="theme-color" content="#15130f">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" href="icons/favicon-64.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="FretMaster">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header class="top">
     <h1>Fret<span>Master</span></h1>
+    <button type="button" id="btn-install" class="install" hidden>⬇ 앱으로 설치</button>
     <div class="stats">
       <div><b id="st-correct">0</b><small>정답</small></div>
       <div><b id="st-wrong">0</b><small>오답</small></div>
@@ -101,6 +109,77 @@
         </div>
         <div class="e-answers" id="e-answers"></div>
         <div class="e-msg" id="e-msg"></div>
+      </div>
+
+      <div class="page triad" id="triad">
+        <div class="d-modes" id="t-modes"></div>
+        <div class="d-ctl d-row" id="t-map-ctl">
+          <label class="field"><span>근음</span><select id="t-root"></select></label>
+          <label class="field"><span>종류</span><select id="t-quality"></select></label>
+          <label class="field"><span>줄 세트</span><select id="t-set"></select></label>
+          <label class="field"><span>보기</span><select id="t-show"></select></label>
+          <label class="field"><span>표시</span>
+            <select id="t-label"><option value="role">도수 (R·3·5)</option><option value="name">음이름</option></select>
+          </label>
+        </div>
+        <div class="d-ctl" id="t-quiz-ctl">
+          <div class="field"><span>출제할 종류</span><div class="chips" id="t-q-qualities"></div></div>
+          <div class="field"><span>출제할 줄 세트</span><div class="chips" id="t-q-sets"></div></div>
+        </div>
+        <div class="e-question small" id="t-prompt"></div>
+        <div class="g-row e-tools"><button type="button" id="t-skip" class="ghost">모르겠어요 <kbd>H</kbd></button></div>
+        <div class="e-msg" id="t-msg"></div>
+        <div class="d-legend" id="t-legend"></div>
+      </div>
+
+      <div class="page interval" id="interval">
+        <div class="d-modes" id="i-modes"></div>
+        <div class="field e-pick-wrap"><span>음정</span><div class="chips" id="i-picks"></div></div>
+        <div class="d-ctl d-row">
+          <label class="field" id="i-dir-field"><span>방향</span>
+            <select id="i-dir"><option value="up">위로</option><option value="down">아래로</option><option value="both">섞어서</option></select>
+          </label>
+          <label class="check" id="i-only-field"><input type="checkbox" id="i-only"> 고른 음정만 보기</label>
+        </div>
+        <div class="e-question small" id="i-prompt"></div>
+        <div class="g-row e-tools"><button type="button" id="i-skip" class="ghost">모르겠어요 <kbd>H</kbd></button></div>
+        <div class="e-msg" id="i-msg"></div>
+        <div class="d-legend">
+          <span><i class="lg lg-root"></i>근음·옥타브</span><span><i class="lg lg-tone"></i>3도</span><span><i class="lg lg-hint"></i>5도</span><span><i class="lg lg-scale"></i>그 밖의 음정</span>
+          <span>음정 모양은 줄이 바뀌어도 같고, 2번 줄(B)로 넘어갈 때만 한 칸 밀려요</span>
+        </div>
+      </div>
+
+      <div class="page jam" id="jam">
+        <div class="d-ctl d-row">
+          <button type="button" id="j-import">⤵ 코드 가이드 진행 가져오기</button>
+          <label class="field"><span>프리셋</span><select id="j-preset"></select></label>
+          <label class="field"><span>키 (바꾸면 진행도 조옮김)</span><select id="j-key"></select></label>
+        </div>
+        <div class="g-prog" id="j-prog"></div>
+        <div class="j-now">
+          <div><small>지금</small><b id="j-now"></b></div>
+          <div class="j-next"><small>다음</small><b id="j-next"></b></div>
+          <div class="m-dots" id="j-dots"></div>
+        </div>
+        <div class="g-row s-actions">
+          <button type="button" id="j-play" class="primary">▶ 반주 시작</button>
+          <div class="m-bpm">
+            <button type="button" id="j-down" aria-label="느리게">−</button>
+            <input type="number" id="j-bpm" min="40" max="220"> <small>BPM</small>
+            <button type="button" id="j-up" aria-label="빠르게">+</button>
+          </div>
+          <select id="j-beats" aria-label="코드당 박"></select>
+          <select id="j-groove" aria-label="드럼 그루브"></select>
+          <label class="check"><input type="checkbox" id="j-drums"> 드럼</label>
+          <label class="check"><input type="checkbox" id="j-bass"> 베이스</label>
+          <select id="j-comp" aria-label="코드 반주"></select>
+        </div>
+        <div class="j-scales">
+          <div class="g-title">이 진행 위에서 쓸 스케일</div>
+          <div class="g-pills" id="j-scales"></div>
+        </div>
+        <div class="d-legend" id="j-legend"></div>
       </div>
 
       <div class="drum" id="drum">
@@ -348,6 +427,9 @@
   <script src="ear.js"></script>
   <script src="metronome.js"></script>
   <script src="drum.js"></script>
+  <script src="triads.js"></script>
+  <script src="intervals.js"></script>
+  <script src="jam.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

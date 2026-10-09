@@ -1,0 +1,17 @@
+{
+  "name": "FretMaster — 기타 지판·코드·드럼 연습",
+  "short_name": "FretMaster",
+  "description": "기타 지판 음 외우기, 코드, 스케일, 귀 훈련, 잼 트랙, 드럼 루디먼트 연습",
+  "lang": "ko",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#15130f",
+  "theme_color": "#15130f",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

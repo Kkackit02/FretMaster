@@ -547,5 +547,5 @@
     };
   }
 
-  global.FretGuide = { init };
+  global.FretGuide = { init, PRESETS };
 })(window);

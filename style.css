@@ -233,7 +233,8 @@ input[type="range"] { accent-color: var(--accent); }
 }
 
 /* ---------- 모드 탭 ---------- */
-.tabs {
+.tabs { display: grid; gap: 8px; justify-items: center; }
+.tab-groups, .tab-drills {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
@@ -242,6 +243,10 @@ input[type="range"] { accent-color: var(--accent); }
   background: var(--panel-2);
   border-radius: 12px;
 }
+.tab-groups button { font-weight: 700; }
+.tab-drills { background: transparent; padding: 0; }
+.tab-drills button { border: 1px solid var(--line) !important; padding: 6px 14px !important; font-size: 14px; }
+.tab-drills button.on { background: var(--text) !important; color: var(--bg) !important; border-color: var(--text) !important; }
 .tabs button {
   border: 0;
   background: transparent;
@@ -671,3 +676,33 @@ body[data-drill="drum"] .settings { display: none; }
 .d-legend b.s-U { color: #5cc48a; }
 .d-legend b.s-F { color: #b48ae0; }
 .d-legend b.s-T { color: #a39883; }
+
+/* ---------- 트라이어드 · 음정 모양 · 잼 트랙 ---------- */
+.page { display: none; width: 100%; gap: 14px; justify-items: center; }
+body[data-drill="triad"] .triad,
+body[data-drill="interval"] .interval,
+body[data-drill="jam"] .jam { display: grid; }
+body[data-drill="triad"] :is(.prompt, .controls, .tuner, .chroma, .piano),
+body[data-drill="interval"] :is(.prompt, .controls, .tuner, .chroma, .piano),
+body[data-drill="jam"] :is(.prompt, .controls, .tuner, .chroma, .piano) { display: none; }
+.e-question.small { font-size: 20px; font-weight: 600; text-align: center; }
+.e-question b { color: var(--accent); }
+
+.fb-mark.inv0 circle { fill: var(--accent); }
+.fb-mark.inv1 circle { fill: var(--good); }
+.fb-mark.inv2 circle { fill: var(--hint); }
+.lg { display: inline-block; width: 11px; height: 11px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; }
+.lg-inv0, .lg-root { background: var(--accent); }
+.lg-inv1, .lg-tone { background: var(--good); }
+.lg-inv2, .lg-hint { background: var(--hint); }
+.lg-scale { background: #cfc4ad; }
+
+.j-now { display: flex; align-items: center; gap: 28px; }
+.j-now > div { display: grid; justify-items: center; }
+.j-now small { color: var(--muted); font-size: 12px; }
+.j-now b { font-size: 52px; line-height: 1.1; }
+.j-next b { font-size: 28px; color: var(--muted); }
+.j-scales { display: grid; gap: 6px; justify-items: center; }
+.j-scales .g-pills button { padding: 6px 12px; font-size: 14px; }
+
+.install { margin-right: auto; margin-left: 4px; padding: 6px 12px; font-size: 13px; border-color: var(--accent); color: var(--accent); }
