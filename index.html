@@ -182,6 +182,47 @@
         <div class="d-legend" id="j-legend"></div>
       </div>
 
+      <div class="page change" id="change">
+        <div class="d-ctl d-row">
+          <label class="field"><span>코드 A</span><select id="c-a"></select></label>
+          <label class="field"><span>코드 B</span><select id="c-b"></select></label>
+          <label class="field"><span>시간</span><select id="c-dur"></select></label>
+        </div>
+        <div class="d-list c-presets" id="c-presets"></div>
+        <div class="c-stage">
+          <div><small>지금 칠 코드</small><b id="c-target"></b></div>
+          <div><small>전환</small><b id="c-count" class="c-count">0</b></div>
+          <div><small>남은 시간</small><b id="c-time"></b></div>
+        </div>
+        <div class="e-msg" id="c-msg"></div>
+        <div class="g-row s-actions"><button type="button" id="c-start" class="primary">🎸 시작 (마이크)</button></div>
+        <div class="c-best" id="c-best"></div>
+        <div class="ch-wrap" id="c-history"></div>
+        <div class="d-legend"><span>한 코드를 칠 때마다 판정해서, 다른 코드로 바꿔 치면 1번으로 세요</span><span>지판에는 다음에 칠 코드의 운지가 나와요</span></div>
+      </div>
+
+      <div class="page logpage" id="stats">
+        <div class="st-tiles" id="s2-tiles"></div>
+        <div class="ch-wrap">
+          <div class="g-title">최근 14일 연습 시간 <small>분 · 막대에 마우스를 올리면 자세히</small></div>
+          <div id="s2-days"></div>
+        </div>
+        <div class="st-heat-head">
+          <div class="g-title">지판 약점 지도 <small>아래 지판 · 칸에 마우스를 올리면 자세히</small></div>
+          <label class="g-inline">기준 <select id="s2-source">
+            <option value="all">단음 + 지판 찍기</option>
+            <option value="note">단음 (마이크)</option>
+            <option value="board">지판 찍기</option>
+          </select></label>
+        </div>
+        <div class="st-legend" id="s2-legend"></div>
+        <div class="st-cols">
+          <div><div class="g-title">가장 약한 음</div><div id="s2-weak"></div></div>
+          <div><div class="g-title">코드 전환 기록</div><div id="s2-changes"></div></div>
+        </div>
+        <button type="button" id="s2-reset" class="ghost">연습 시간·전환 기록 지우기</button>
+      </div>
+
       <div class="drum" id="drum">
         <div class="d-modes" id="d-modes"></div>
 
@@ -420,6 +461,7 @@
     </details>
   </main>
 
+  <script src="log.js"></script>
   <script src="pitch.js"></script>
   <script src="chords.js"></script>
   <script src="guide.js"></script>
@@ -430,6 +472,8 @@
   <script src="triads.js"></script>
   <script src="intervals.js"></script>
   <script src="jam.js"></script>
+  <script src="change.js"></script>
+  <script src="stats.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

@@ -706,3 +706,95 @@ body[data-drill="jam"] :is(.prompt, .controls, .tuner, .chroma, .piano) { displa
 .j-scales .g-pills button { padding: 6px 12px; font-size: 14px; }
 
 .install { margin-right: auto; margin-left: 4px; padding: 6px 12px; font-size: 13px; border-color: var(--accent); color: var(--accent); }
+
+/* ---------- 코드 전환 ---------- */
+body[data-drill="change"] .change,
+body[data-drill="stats"] .logpage { display: grid; }
+body[data-drill="change"] :is(.prompt, .controls, .piano) { display: none; }
+body[data-drill="change"] .chroma { display: grid; }
+body[data-drill="change"] .tuner-meter { visibility: hidden; }
+body[data-drill="stats"] :is(.prompt, .controls, .tuner, .chroma, .piano) { display: none; }
+.c-presets button { padding: 5px 10px; font-size: 13px; }
+.c-presets button.on { border-color: var(--accent); color: var(--accent); }
+.c-stage { display: flex; gap: 36px; align-items: end; justify-content: center; flex-wrap: wrap; }
+.c-stage > div { display: grid; justify-items: center; }
+.c-stage small { color: var(--muted); font-size: 12px; }
+.c-stage b { font-size: 56px; line-height: 1.05; font-variant-numeric: tabular-nums; }
+#c-target { color: var(--accent); }
+.c-count.bump { animation: bump .25s ease-out; }
+@keyframes bump { 50% { transform: scale(1.25); color: var(--good); } }
+.c-best { color: var(--muted); font-size: 14px; }
+
+/* ---------- 차트 (기록 추이, 연습 시간) ---------- */
+.ch-wrap { width: min(680px, 100%); display: grid; gap: 6px; }
+.ch-wrap:empty { display: none; }
+.ch-wrap svg { width: 100%; height: auto; }
+.ch-grid { stroke: var(--line); stroke-width: 1; }
+.ch-axis { fill: var(--muted); font-size: 11px; }
+.ch-line { fill: none; stroke: var(--accent); stroke-width: 2; }
+.ch-pt circle { fill: var(--accent); stroke: var(--panel); stroke-width: 2; }
+.ch-pt:hover circle { r: 6.5; }
+.ch-label { fill: var(--text); font-size: 12px; font-weight: 700; }
+.ch-bar { fill: var(--accent); opacity: .75; }
+.ch-bar.today { opacity: 1; }
+.ch-col:hover .ch-bar { opacity: 1; }
+
+/* ---------- 연습 기록 ---------- */
+.st-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; width: 100%; }
+.st-tile { display: grid; gap: 2px; padding: 12px 14px; background: var(--panel-2); border-radius: 12px; }
+.st-tile b { font-size: 28px; font-variant-numeric: tabular-nums; }
+.st-tile small { color: var(--muted); font-size: 13px; }
+.st-tile em { font-style: normal; color: var(--muted); font-size: 12px; }
+.st-heat-head { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between; width: min(680px, 100%); }
+.st-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; font-size: 12px; color: var(--muted); }
+.st-legend i { width: 22px; height: 12px; border-radius: 3px; display: inline-block; }
+.st-legend span { margin: 0 6px; }
+.st-unseen i { background: transparent; border: 1.5px dashed var(--muted); vertical-align: -2px; margin-right: 4px; }
+.st-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; width: 100%; }
+.st-weak { display: grid; grid-template-columns: auto auto 1fr; gap: 2px 8px; align-items: baseline; padding: 6px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+.st-weak i { width: 12px; height: 12px; border-radius: 50%; align-self: center; }
+.st-weak small { color: var(--muted); }
+.st-weak span { grid-column: 2 / -1; color: var(--muted); font-size: 12px; }
+.st-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.st-table th { text-align: left; color: var(--muted); font-weight: 600; font-size: 12px; padding: 4px 6px; border-bottom: 1px solid var(--line); }
+.st-table td { padding: 6px; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+.fb-mark.heat circle { stroke: #0006; }
+.fb-mark.unseen circle { fill: transparent; stroke: #cfc4ad; stroke-width: 1.2; stroke-dasharray: 3 2; opacity: .6; }
+.fb-mark.unseen text { fill: #cfc4ad; opacity: .6; }
+
+/* ---------- 휴대폰 ---------- */
+#fretboard svg.vertical { min-width: 0; width: 100%; max-width: 420px; margin: 0 auto; }
+#fretboard svg.vertical .fb-mark text { font-size: 12px; }
+@media (max-width: 640px) {
+  main { padding: 12px 8px 40px; gap: 12px; }
+  .top { padding: 10px 12px; gap: 8px; }
+  .top h1 { font-size: 19px; }
+  .stats { gap: 4px; }
+  .stats > div { padding: 4px 6px; border-radius: 8px; }
+  .stats b { font-size: 15px; }
+  .stats small { font-size: 10px; }
+  .stage { padding: 16px 10px 14px; gap: 14px; }
+  .board-wrap { padding: 10px 6px; }
+  .settings { padding: 12px; }
+  .metro { padding: 8px 10px; gap: 6px 8px; font-size: 13px; }
+  .metro .m-label, .metro .m-info { display: none; }
+  .tab-groups button { padding: 7px 10px; font-size: 13px; }
+  .tab-drills button { padding: 5px 10px !important; font-size: 13px; }
+  .prompt-note { font-size: 84px; }
+  .controls button, .s-actions button { padding: 9px 14px; }
+  .d-ctl.d-row .field { min-width: 0; flex: 1 1 140px; }
+  .s-controls { grid-template-columns: 1fr 1fr; }
+  .c-stage { gap: 18px; }
+  .c-stage b, .j-now b { font-size: 40px; }
+  .g-name b { font-size: 34px; }
+  .e-answers { grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); }
+  .piano { height: 140px; }
+  .install { padding: 5px 8px; font-size: 12px; }
+}
+/* 선택 상자가 긴 항목 이름 때문에 화면 밖으로 밀려나지 않게 */
+select { max-width: 100%; text-overflow: ellipsis; }
+.field { min-width: 0; }
+@media (max-width: 640px) {
+  .d-ctl.d-row .field select { width: 100%; }
+}
+.j-now > .m-dots { display: flex; align-self: center; }

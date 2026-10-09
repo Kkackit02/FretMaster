@@ -1,5 +1,5 @@
 // 오프라인용 서비스 워커: 온라인이면 항상 새 파일(네트워크 우선), 안 되면 저장해 둔 파일
-const CACHE = 'fretmaster-v1';
+const CACHE = 'fretmaster-v2';
 const ASSETS = [
   './',
   'index.html',
@@ -14,6 +14,9 @@ const ASSETS = [
   'triads.js',
   'intervals.js',
   'jam.js',
+  'log.js',
+  'change.js',
+  'stats.js',
   'app.js',
   'manifest.webmanifest',
   'icons/icon-192.png',
@@ -39,7 +42,8 @@ self.addEventListener('fetch', (event) => {
   const req = event.request;
   if (req.method !== 'GET' || new URL(req.url).origin !== self.location.origin) return;
   event.respondWith(
-    fetch(req)
+    // 브라우저 HTTP 캐시도 건너뛰고 서버에 확인 (바뀌지 않았으면 304라 가벼움) → 배포가 바로 반영됨
+    fetch(req.url, { cache: 'no-cache', credentials: 'same-origin' })
       .then((res) => {
         if (res.ok) {
           const copy = res.clone();

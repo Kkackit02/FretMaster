@@ -26,6 +26,7 @@
     note:  { label: '단음' },
     tones: { label: '코드 구성음' },
     strum: { label: '코드 스트럼' },
+    change: { label: '코드 전환' },
     board: { label: '지판 찍기' },
     piano: { label: '건반 코드' },
     scale: { label: '스케일' },
@@ -35,13 +36,15 @@
     guide: { label: '코드 가이드' },
     jam:   { label: '잼 트랙' },
     drum:  { label: '드럼' },
+    stats: { label: '연습 기록' },
   };
   // 위 줄: 분류, 아래 줄: 그 분류의 탭
   const GROUPS = [
-    { id: 'guitar', label: '🎸 기타 연습', drills: ['note', 'tones', 'strum', 'board', 'scale', 'triad', 'interval'] },
+    { id: 'guitar', label: '🎸 기타 연습', drills: ['note', 'tones', 'strum', 'change', 'board', 'scale', 'triad', 'interval'] },
     { id: 'theory', label: '🎹 이론·귀', drills: ['piano', 'ear', 'guide'] },
     { id: 'jam', label: '🎶 합주', drills: ['jam'] },
     { id: 'drum', label: '🥁 드럼', drills: ['drum'] },
+    { id: 'stats', label: '📈 기록', drills: ['stats'] },
   ];
   const groupOf = (drill) => GROUPS.find((g) => g.drills.includes(drill)) || GROUPS[0];
   const MIC_FREE = new Set(['board', 'piano']); // 화면을 눌러서 답하는 모드
@@ -103,7 +106,7 @@
   let nextTimer = null;
   let guide = null;       // 코드 가이드 (guide.js)
   let scales = null;      // 스케일 연습 (scales.js)
-  const PAGES = new Set(['guide', 'scale', 'ear', 'drum', 'triad', 'interval', 'jam']); // 자체 화면을 가진 탭 (모듈 파일)
+  const PAGES = new Set(['guide', 'scale', 'ear', 'drum', 'triad', 'interval', 'jam', 'change', 'stats']); // 자체 화면을 가진 탭 (모듈 파일)
   const pages = {};       // 탭 id → 모듈
   let pianoChord = null;  // 가이드에서 건반에 보여줄 코드
 
@@ -580,7 +583,13 @@
     el.needle.style.opacity = 0;
   }
 
+  let loggedCorrect = 0;
+  let loggedWrong = 0;
   function updateStats() {
+    if (session.correct > loggedCorrect) FretLog.answer(true, session.correct - loggedCorrect);
+    if (session.wrong > loggedWrong) FretLog.answer(false, session.wrong - loggedWrong);
+    loggedCorrect = session.correct;
+    loggedWrong = session.wrong;
     el.stCorrect.textContent = session.correct;
     el.stWrong.textContent = session.wrong;
     el.stStreak.textContent = session.streak;
@@ -637,6 +646,21 @@
     analyser.getFloatTimeDomainData(buf);
     const level = FretPitch.rms(buf);
     const loud = level > gateLevel();
+
+    if (settings.drill === 'change') {
+      if (loud) {
+        audio.chromaAnalyser.getFloatFrequencyData(audio.spectrum);
+        FretPitch.chroma(audio.spectrum, ctx.sampleRate, audio.chromaAnalyser.fftSize, audio.chroma);
+        lastActive = Date.now();
+      } else {
+        audio.chroma.fill(0);
+      }
+      updateLevel(level);
+      updateChroma(loud);
+      pages.change.onFrame(level, audio.chroma, loud, gateLevel());
+      return;
+    }
+    if (loud) lastActive = Date.now();
 
     if (settings.drill === 'strum') {
       if (loud) {
@@ -921,77 +945,123 @@
   const fx = (f) => (f === 0 ? FB.left - 22 : FB.left + (f - 0.5) * FB.fretW);
   const sy = (s) => FB.top + (s - 1) * FB.gap;
 
+  // 휴대폰 세로 화면에서는 지판을 세로로 (코드 다이어그램처럼 6번 줄이 왼쪽, 위가 0프렛)
+  const FV = { top: 50, left: 44, gap: 46, fretH: 50 };
+  const verticalQuery = window.matchMedia('(max-width: 640px) and (orientation: portrait)');
+  let lastMarks = [];
+  verticalQuery.addEventListener('change', () => renderBoard(lastMarks));
+
   function renderBoard(marks = []) {
-    const n = Math.max(boardFrets(), ...marks.map((m) => m.f));
-    const width = FB.left + n * FB.fretW + 12;
-    const bottom = sy(6);
-    const height = bottom + 40;
-    const midY = (sy(1) + bottom) / 2;
+    lastMarks = marks;
+    const vertical = verticalQuery.matches;
+    const n = Math.max(boardFrets(), ...marks.map((m) => m.f ?? 0));
     const parts = [];
-
-    parts.push(`<rect class="fb-board" x="${FB.left}" y="${FB.top - 12}" width="${n * FB.fretW}" height="${bottom - FB.top + 24}" rx="3"/>`);
-
-    for (let f = 1; f <= n; f++) {
-      const x = fx(f);
-      if (f % 12 === 0) {
-        parts.push(`<circle class="fb-inlay" cx="${x}" cy="${sy(2) + FB.gap / 2}" r="6"/>`);
-        parts.push(`<circle class="fb-inlay" cx="${x}" cy="${sy(4) + FB.gap / 2}" r="6"/>`);
-      } else if ([3, 5, 7, 9].includes(f % 12)) {
-        parts.push(`<circle class="fb-inlay" cx="${x}" cy="${midY}" r="6"/>`);
-      }
-    }
-
-    // 연습 범위 밖 프렛은 어둡게
-    for (let f = 1; f <= n; f++) {
-      if (f < settings.fretMin || f > settings.fretMax) {
-        parts.push(`<rect class="fb-out" x="${FB.left + (f - 1) * FB.fretW}" y="${FB.top - 12}" width="${FB.fretW}" height="${bottom - FB.top + 24}"/>`);
-      }
-    }
-
-    for (let f = 1; f <= n; f++) {
-      const x = FB.left + f * FB.fretW;
-      parts.push(`<line class="fb-fret" x1="${x}" y1="${FB.top - 12}" x2="${x}" y2="${bottom + 12}"/>`);
-    }
-    parts.push(`<rect class="fb-nut" x="${FB.left - 4}" y="${FB.top - 12}" width="6" height="${bottom - FB.top + 24}"/>`);
-
+    let width, height;
+    // 줄 s, 프렛 f의 좌표
+    const pos = vertical
+      ? (st, f) => ({ x: FV.left + (6 - st) * FV.gap, y: f === 0 ? FV.top - 24 : FV.top + (f - 0.5) * FV.fretH })
+      : (st, f) => ({ x: fx(f), y: sy(st) });
     const activeString = phase !== 'idle' && question?.string;
-    for (const s of STRINGS) {
-      const y = sy(s);
-      const active = s === activeString ? ' active' : '';
-      const dim = settings.strings.includes(s) ? '' : ' style="opacity:.3"';
-      parts.push(`<line class="fb-string${active}" x1="${FB.left - 36}" y1="${y}" x2="${width - 12}" y2="${y}" stroke-width="${1 + (s - 1) * 0.45}"${dim}/>`);
-      parts.push(`<text class="fb-label${active}" x="10" y="${y}">${s}</text>`);
+
+    if (vertical) {
+      const x0 = FV.left - 16, x1 = FV.left + 5 * FV.gap + 16;
+      width = x1 + 14;
+      height = FV.top + n * FV.fretH + 14;
+      parts.push(`<rect class="fb-board" x="${x0}" y="${FV.top}" width="${x1 - x0}" height="${n * FV.fretH}" rx="3"/>`);
+      for (let f = 1; f <= n; f++) {
+        const y = FV.top + (f - 0.5) * FV.fretH;
+        if (f % 12 === 0) {
+          parts.push(`<circle class="fb-inlay" cx="${FV.left + 1.5 * FV.gap}" cy="${y}" r="6"/><circle class="fb-inlay" cx="${FV.left + 3.5 * FV.gap}" cy="${y}" r="6"/>`);
+        } else if ([3, 5, 7, 9].includes(f % 12)) {
+          parts.push(`<circle class="fb-inlay" cx="${FV.left + 2.5 * FV.gap}" cy="${y}" r="6"/>`);
+        }
+        if (f < settings.fretMin || f > settings.fretMax) {
+          parts.push(`<rect class="fb-out" x="${x0}" y="${FV.top + (f - 1) * FV.fretH}" width="${x1 - x0}" height="${FV.fretH}"/>`);
+        }
+        parts.push(`<line class="fb-fret" x1="${x0}" y1="${FV.top + f * FV.fretH}" x2="${x1}" y2="${FV.top + f * FV.fretH}"/>`);
+      }
+      parts.push(`<rect class="fb-nut" x="${x0}" y="${FV.top - 4}" width="${x1 - x0}" height="6"/>`);
+      for (const st of STRINGS) {
+        const x = pos(st, 0).x;
+        const active = st === activeString ? ' active' : '';
+        const dim = settings.strings.includes(st) ? '' : ' style="opacity:.3"';
+        parts.push(`<line class="fb-string${active}" x1="${x}" y1="${FV.top - 40}" x2="${x}" y2="${height - 10}" stroke-width="${1 + (st - 1) * 0.45}"${dim}/>`);
+        parts.push(`<text class="fb-label${active}" x="${x}" y="10">${st}</text>`);
+      }
+      for (let f = 0; f <= n; f++) parts.push(`<text class="fb-num" x="16" y="${pos(1, f).y + 4}">${f}</text>`);
+    } else {
+      width = FB.left + n * FB.fretW + 12;
+      const bottom = sy(6);
+      height = bottom + 40;
+      const midY = (sy(1) + bottom) / 2;
+      parts.push(`<rect class="fb-board" x="${FB.left}" y="${FB.top - 12}" width="${n * FB.fretW}" height="${bottom - FB.top + 24}" rx="3"/>`);
+      for (let f = 1; f <= n; f++) {
+        const x = fx(f);
+        if (f % 12 === 0) {
+          parts.push(`<circle class="fb-inlay" cx="${x}" cy="${sy(2) + FB.gap / 2}" r="6"/>`);
+          parts.push(`<circle class="fb-inlay" cx="${x}" cy="${sy(4) + FB.gap / 2}" r="6"/>`);
+        } else if ([3, 5, 7, 9].includes(f % 12)) {
+          parts.push(`<circle class="fb-inlay" cx="${x}" cy="${midY}" r="6"/>`);
+        }
+      }
+      // 연습 범위 밖 프렛은 어둡게
+      for (let f = 1; f <= n; f++) {
+        if (f < settings.fretMin || f > settings.fretMax) {
+          parts.push(`<rect class="fb-out" x="${FB.left + (f - 1) * FB.fretW}" y="${FB.top - 12}" width="${FB.fretW}" height="${bottom - FB.top + 24}"/>`);
+        }
+      }
+      for (let f = 1; f <= n; f++) {
+        const x = FB.left + f * FB.fretW;
+        parts.push(`<line class="fb-fret" x1="${x}" y1="${FB.top - 12}" x2="${x}" y2="${bottom + 12}"/>`);
+      }
+      parts.push(`<rect class="fb-nut" x="${FB.left - 4}" y="${FB.top - 12}" width="6" height="${bottom - FB.top + 24}"/>`);
+      for (const st of STRINGS) {
+        const y = sy(st);
+        const active = st === activeString ? ' active' : '';
+        const dim = settings.strings.includes(st) ? '' : ' style="opacity:.3"';
+        parts.push(`<line class="fb-string${active}" x1="${FB.left - 36}" y1="${y}" x2="${width - 12}" y2="${y}" stroke-width="${1 + (st - 1) * 0.45}"${dim}/>`);
+        parts.push(`<text class="fb-label${active}" x="10" y="${y}">${st}</text>`);
+      }
+      for (let f = 0; f <= n; f++) parts.push(`<text class="fb-num" x="${fx(f)}" y="${bottom + 30}">${f}</text>`);
     }
 
-    for (let f = 0; f <= n; f++) {
-      parts.push(`<text class="fb-num" x="${fx(f)}" y="${bottom + 30}">${f}</text>`);
-    }
-
+    const r = vertical ? 13 : 11;
     for (const m of marks) {
       if (m.cls === 'spacer') continue; // 지판 길이만 늘리는 표시
       if (m.cls === 'barre') {
-        parts.push(`<rect class="fb-barre" x="${fx(m.f) - 8}" y="${sy(m.s1) - 8}" width="16" height="${sy(m.s2) - sy(m.s1) + 16}" rx="8"/>`);
+        const a = pos(m.s1, m.f), b = pos(m.s2, m.f);
+        const x = Math.min(a.x, b.x) - 9, y = Math.min(a.y, b.y) - 9;
+        parts.push(`<rect class="fb-barre" x="${x}" y="${y}" width="${Math.abs(a.x - b.x) + 18}" height="${Math.abs(a.y - b.y) + 18}" rx="9"/>`);
         continue;
       }
+      const { x, y } = pos(m.s, m.f);
       const label = m.label ?? noteName(m.midi % 12, question?.acc === 'flat' ? 'flat' : 'sharp');
+      const fill = m.color ? ` style="fill:${m.color}"` : '';
+      const title = m.title ? `<title>${m.title}</title>` : '';
       parts.push(
-        `<g class="fb-mark ${m.cls}${m.still ? '' : ' pop'}"><circle cx="${fx(m.f)}" cy="${sy(m.s)}" r="11"/>` +
-        `<text x="${fx(m.f)}" y="${sy(m.s)}">${label}</text></g>`,
+        `<g class="fb-mark ${m.cls}${m.still ? '' : ' pop'}">${title}<circle cx="${x}" cy="${y}" r="${r}"${fill}/>` +
+        `<text x="${x}" y="${y}"${m.textColor ? ` style="fill:${m.textColor}"` : ''}>${label}</text></g>`,
       );
     }
 
-    // 지판 찍기 모드: 칸마다 투명한 클릭 영역
+    // 지판을 눌러 답하는 탭: 칸마다 투명한 클릭 영역
     if (isBoard() || PAGES.has(settings.drill)) {
-      for (const s of STRINGS) {
+      for (const st of STRINGS) {
         for (let f = 0; f <= n; f++) {
-          const x = f === 0 ? FB.left - 44 : FB.left + (f - 1) * FB.fretW;
-          const w = f === 0 ? 40 : FB.fretW;
-          parts.push(`<rect class="fb-hit" data-s="${s}" data-f="${f}" x="${x}" y="${sy(s) - FB.gap / 2}" width="${w}" height="${FB.gap}"/>`);
+          let x, y, w, h;
+          if (vertical) {
+            x = pos(st, 0).x - FV.gap / 2; w = FV.gap;
+            y = f === 0 ? FV.top - 44 : FV.top + (f - 1) * FV.fretH; h = f === 0 ? 42 : FV.fretH;
+          } else {
+            x = f === 0 ? FB.left - 44 : FB.left + (f - 1) * FB.fretW; w = f === 0 ? 40 : FB.fretW;
+            y = sy(st) - FB.gap / 2; h = FB.gap;
+          }
+          parts.push(`<rect class="fb-hit" data-s="${st}" data-f="${f}" x="${x}" y="${y}" width="${w}" height="${h}"/>`);
         }
       }
     }
 
-    el.board.innerHTML = `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="기타 지판">${parts.join('')}</svg>`;
+    el.board.innerHTML = `<svg class="${vertical ? 'vertical' : 'horizontal'}" viewBox="0 0 ${width} ${height}" role="img" aria-label="기타 지판">${parts.join('')}</svg>`;
   }
 
   // ---------- 모드 탭 ----------
@@ -1078,6 +1148,7 @@
       settings, persist, noteName, noteNameWithOctave, renderBoard, playTone,
       accFor: (pc, type) => pickAccidental(pc, type, true),
       score: scoreExternal, chime: playChime, startMic: micStart, stopMic: micStop,
+      shapeMarks, getStats: () => stats,
     };
     Object.assign(pages, {
       guide, scale: scales, ear,
@@ -1085,6 +1156,8 @@
       triad: FretTriads.init(common),
       interval: FretIntervals.init(common),
       jam: FretJam.init(common),
+      change: FretChange.init(common),
+      stats: FretStats.init(common),
     });
     FretMetronome.init({ settings, persist });
 
@@ -1262,12 +1335,20 @@
     else if (e.code === 'Space' && settings.drill === 'ear') { e.preventDefault(); pages.ear.replay(); }
     else if (e.code === 'Space' && settings.drill === 'drum') { e.preventDefault(); pages.drum.toggle(); }
     else if (e.code === 'Space' && settings.drill === 'jam') { e.preventDefault(); pages.jam.toggle(); }
+    else if (e.code === 'Space' && settings.drill === 'change') { e.preventDefault(); pages.change.toggle(); }
     else if (e.code === 'KeyH' && (settings.drill === 'triad' || settings.drill === 'interval')) pages[settings.drill].giveUp();
     else if (e.code === 'KeyH' && settings.drill === 'ear') pages.ear.giveUp();
     else if (e.code === 'Space') { e.preventDefault(); skip(); }
     else if (e.code === 'KeyH') giveHint();
     else if (e.code === 'Enter' && !audio.ctx) toggle();
   });
+
+  // ---------- 연습 시간 기록 ----------
+  let lastActive = 0;
+  ['pointerdown', 'keydown'].forEach((t) => document.addEventListener(t, () => { lastActive = Date.now(); }, { passive: true }));
+  setInterval(() => {
+    if (document.visibilityState === 'visible' && Date.now() - lastActive < 60000) FretLog.tick(15);
+  }, 15000);
 
   // ---------- 앱 설치 (PWA) ----------
   if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
