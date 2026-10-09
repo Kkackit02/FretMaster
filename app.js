@@ -44,7 +44,7 @@
   const GROUPS = [
     { id: 'guitar', label: '기타 연습', drills: ['note', 'tones', 'strum', 'change', 'board', 'scale', 'triad', 'interval'] },
     { id: 'theory', label: '이론+청음', drills: ['piano', 'ear', 'staff', 'guide', 'analyze'] },
-    { id: 'jam', label: '합주', drills: ['jam'] },
+    { id: 'jam', label: '잼 연습', drills: ['jam'] },
     { id: 'drum', label: '드럼', drills: ['drum'] },
     { id: 'stats', label: '기록', drills: ['stats'] },
   ];
