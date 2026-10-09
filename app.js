@@ -23,15 +23,15 @@
   };
   const MINOR_TYPES = new Set(['min', 'min7', 'dim', 'm7b5']);
   const DRILLS = {
-    note:  { label: '단음' },
-    tones: { label: '코드 구성음' },
-    strum: { label: '코드 스트럼' },
-    change: { label: '코드 전환' },
-    board: { label: '지판 찍기' },
+    note:  { label: '단음', help: '화면의 음을 기타로 치면 마이크로 판정. 줄 지정 또는 음이름만 출제' },
+    tones: { label: '코드 구성음', help: '코드의 구성음을 기타로 한 음씩 치기. 줄·옥타브 무관' },
+    strum: { label: '코드 스트럼', help: '코드를 잡고 한 번에 스트럼. 마이크로 코드 판정' },
+    change: { label: '코드 전환', help: '두 코드를 번갈아 치며 정해진 시간 동안 전환 횟수 측정' },
+    board: { label: '지판 찍기', help: '마이크 없이 지판을 눌러 음 위치나 코드 구성음 찾기' },
     piano: { label: '건반 코드' },
-    scale: { label: '스케일' },
-    triad: { label: '트라이어드' },
-    interval: { label: '음정 모양' },
+    scale: { label: '스케일', help: '스케일 포지션 보기·듣기. 지판 클릭 또는 기타로 순서대로 연습' },
+    triad: { label: '트라이어드', help: '줄 세트별 3화음 기본형·1전위·2전위 위치 보기와 퀴즈' },
+    interval: { label: '음정 모양', help: '근음에서 3도·5도 등 음정 위치를 지판에서 찾기. 모양 보기 포함' },
     ear:   { label: '귀 훈련' },
     staff: { label: '오선보' },
     analyze: { label: '진행 분석' },
@@ -1075,7 +1075,8 @@
       (group.drills.length > 1
         ? `<div class="tab-drills" role="tablist">${group.drills.map((id) =>
           `<button type="button" data-drill="${id}" role="tab" class="${id === settings.drill ? 'on' : ''}" aria-selected="${id === settings.drill}">${DRILLS[id].label}</button>`).join('')}</div>`
-        : '');
+        : '') +
+      (DRILLS[settings.drill].help ? `<p class="tab-help">${DRILLS[settings.drill].help}</p>` : '');
   }
 
   function initTabs() {
