@@ -1,4 +1,4 @@
-// 드럼: 루디먼트 / 악센트 / 그루브 / 리딩 악보 + 소리
+// 드럼: 루디먼트 / 액센트 / 그루브 / 리딩 악보 + 소리
 (function (global) {
   'use strict';
 
@@ -13,45 +13,45 @@
   // 토큰: [꾸밈음(소문자)][손 R·L 또는 발 K][>액센트][:길이]  예) lR>  llR  R>:8  K  /  unit = 기본 길이
   const RUDIMENTS = [
     { id: 'single', cat: '롤', name: '싱글 스트로크 롤', unit: 16, pattern: 'R L R L R L R L',
-      desc: '양손을 번갈아 한 번씩. 모든 루디먼트의 기본이라 두 손 소리 크기를 똑같이 맞추는 게 목표예요.' },
+      desc: '양손 교대로 한 번씩. 양손 음량을 같게.' },
     { id: 'double', cat: '롤', name: '더블 스트로크 롤', unit: 16, pattern: 'R R L L R R L L',
-      desc: '한 손으로 두 번씩. 두 번째 타는 손목이 아니라 튕겨 나오는 힘(리바운드)으로 쳐서 첫 타와 크기를 맞춰요.' },
+      desc: '한 손에 두 번씩. 두 번째 타는 리바운드로, 첫 타와 같은 음량.' },
     { id: 'five', cat: '롤', name: '파이브 스트로크 롤', unit: 32, pattern: 'R R L L R>:8 L L R R L>:8',
-      desc: '더블 두 번 뒤 액센트 한 번. 더블은 작게, 마지막 액센트는 크게 대비를 줘요.' },
+      desc: '더블 두 번 + 액센트 한 번.' },
     { id: 'seven', cat: '롤', name: '세븐 스트로크 롤', unit: '16t', pattern: 'R R L L R R L>:4 L L R R L L R>:4',
-      desc: '더블 세 번 뒤 액센트. 더블이 고르게 이어지는지 들어 보세요.' },
+      desc: '더블 세 번 + 액센트 한 번.' },
     { id: 'para', cat: '패러디들', name: '싱글 패러디들', unit: 16, pattern: 'R> L R R L> R L L',
-      desc: '싱글 두 번 + 더블 한 번 (RLRR LRLL). 첫 음 액센트가 손을 바꿔 가며 나와요. 그루브와 필인에 가장 많이 쓰여요.' },
+      desc: '싱글 두 번 + 더블 한 번 (RLRR LRLL). 첫 음 액센트, 박마다 시작 손이 바뀜.' },
     { id: 'dpara', cat: '패러디들', name: '더블 패러디들', unit: '16t', pattern: 'R> L R L R R L> R L R L L',
-      desc: '싱글 네 번 + 더블 한 번. 여섯잇단으로 한 박에 6개씩.' },
+      desc: '싱글 네 번 + 더블 한 번. 여섯잇단.' },
     { id: 'tpara', cat: '패러디들', name: '트리플 패러디들', unit: 16, pattern: 'R> L R L R L R R L> R L R L R L L',
-      desc: '싱글 여섯 번 + 더블 한 번. 액센트가 두 박마다 손을 바꿔요.' },
+      desc: '싱글 여섯 번 + 더블 한 번. 두 박마다 시작 손이 바뀜.' },
     { id: 'pdd', cat: '패러디들', name: '패러디들-디들', unit: '16t', pattern: 'R> L R R L L R> L R R L L',
-      desc: '싱글 두 번 + 더블 두 번 (RLRRLL). 같은 손으로 시작해서 손 바꿈 없이 반복돼요.' },
+      desc: '싱글 두 번 + 더블 두 번 (RLRRLL). 시작 손이 바뀌지 않음.' },
     { id: 'flam', cat: '플램', name: '플램', unit: 4, pattern: 'lR rL lR rL',
-      desc: '작은 꾸밈음(약하게, 낮은 높이)과 주음(세게, 높은 높이)을 거의 동시에. "플-램" 하고 두 소리가 살짝 벌어져 들리면 좋아요.' },
+      desc: '꾸밈음(약하게) 직후 주음(세게). 두 소리가 겹치지 않게.' },
     { id: 'flamtap', cat: '플램', name: '플램 탭', unit: 16, pattern: 'lR R rL L lR R rL L',
-      desc: '플램 뒤에 같은 손으로 한 번 더. 플램 주음을 친 손이 바로 탭을 쳐요.' },
+      desc: '플램 + 같은 손 탭.' },
     { id: 'flamacc', cat: '플램', name: '플램 액센트', unit: '8t', pattern: 'lR> L R rL> R L',
-      desc: '셋잇단 첫 음에 플램 + 액센트. 손이 박마다 바뀌어요.' },
+      desc: '셋잇단 첫 음에 플램과 액센트. 박마다 시작 손이 바뀜.' },
     { id: 'flamacue', cat: '플램', name: '플라마큐', unit: 16, pattern: 'lR L> R L lR:4',
-      desc: '두 번째 음에 액센트가 오는 게 특징. 처음과 끝은 플램.' },
+      desc: '두 번째 음에 액센트. 처음과 끝은 플램.' },
     { id: 'flampara', cat: '플램', name: '플램 패러디들', unit: 16, pattern: 'lR> L R R rL> R L L',
       desc: '싱글 패러디들의 첫 음을 플램으로.' },
     { id: 'swiss', cat: '플램', name: '스위스 아미 트리플렛', unit: '8t', pattern: 'lR R L lR R L',
-      desc: '플램 + 같은 손 + 반대 손. 같은 손으로 계속 시작해서 빠르게 치기 좋아요.' },
+      desc: '플램 + 같은 손 + 반대 손. 시작 손이 바뀌지 않음.' },
     { id: 'drag', cat: '드래그', name: '드래그 (러프)', unit: 4, pattern: 'llR rrL llR rrL',
-      desc: '같은 손 꾸밈음 두 개(더블처럼 튕겨서) + 반대 손 주음. 꾸밈음은 아주 작게.' },
+      desc: '같은 손 꾸밈음 두 개 + 반대 손 주음.' },
     { id: 'rlk', cat: '손발 조합', name: '손손발 셋잇단 (RLK)', unit: '8t', pattern: 'R> L K R> L K',
-      desc: '오른손-왼손-킥을 셋잇단으로. 필인과 솔로에서 가장 많이 쓰는 손발 조합이에요. 킥이 손만큼 또렷하게 들리게.' },
+      desc: '오른손·왼손·킥 셋잇단. 킥 음량을 손과 같게.' },
     { id: 'rlrk', cat: '손발 조합', name: 'RLRK', unit: 16, pattern: 'R> L R K R> L R K',
-      desc: '16분음표 네 개 중 마지막을 킥으로. 박의 첫 음이 항상 오른손이라 박자를 잡기 쉬워요.' },
+      desc: '16분 네 개 중 마지막이 킥. 박의 첫 음은 항상 오른손.' },
     { id: 'rllk', cat: '손발 조합', name: 'RLLK', unit: 16, pattern: 'R> L L K R> L L K',
-      desc: '오른손 하나, 왼손 더블, 킥. 왼손 더블이 고르게 나오는지 들어 보세요.' },
+      desc: '오른손 + 왼손 더블 + 킥.' },
     { id: 'rklk', cat: '손발 조합', name: 'RKLK', unit: 16, pattern: 'R> K L K R> K L K',
-      desc: '손 사이마다 킥. 킥이 16분음표 뒷박마다 들어가서 발 연습에 좋아요.' },
+      desc: '손과 킥 교대. 킥은 16분 뒷박.' },
     { id: 'gospel', cat: '손발 조합', name: '가스펠 식스 (RLRLKK)', unit: '16t', pattern: 'R> L R L K K R> L R L K K',
-      desc: '여섯잇단으로 손 네 번 + 킥 두 번. 가스펠·퓨전 드러머들이 즐겨 쓰는 빠른 필인 패턴이에요.' },
+      desc: '여섯잇단: 손 네 번 + 킥 두 번.' },
   ];
 
   const KICK_MODES = { none: '킥 없음', beat: '매 박 (4분음표)', half: '1·3박', accent: '액센트마다' };
@@ -77,7 +77,7 @@
     });
   }
 
-  // ---------- 악센트 ----------
+  // ---------- 액센트 ----------
   const STICKINGS = {
     single: { label: '싱글 (RLRL)', seq: 'RL' },
     double: { label: '더블 (RRLL)', seq: 'RRLL' },
@@ -86,11 +86,11 @@
     left: { label: '왼손만', seq: 'L' },
   };
   const ACCENT_TYPES = {
-    shift16: { label: '악센트 한 칸씩 옮기기 (16분)', desc: '마디마다 액센트가 박의 1번째 → 2번째(e) → 3번째(&) → 4번째(a) 16분음표로 옮겨 가요. 액센트가 아닌 음은 아주 작게(탭).' },
-    shift8t: { label: '악센트 한 칸씩 옮기기 (셋잇단)', desc: '셋잇단의 1번째 → 2번째 → 3번째 음으로 액센트가 옮겨 가요.' },
-    group: { label: 'N개마다 액센트 (그룹핑)', desc: '16분음표 위에 N개마다 액센트. 3·5·7개로 묶으면 박과 어긋나면서 폴리리듬처럼 들려요.' },
-    random: { label: '무작위 악센트', desc: '무작위로 만든 액센트 패턴을 읽으며 쳐 보세요. 🎲로 새 패턴을 만들 수 있어요.' },
-    custom: { label: '직접 만들기', desc: '악보의 음표를 눌러 액센트를 켜고 끌 수 있어요.' },
+    shift16: { label: '액센트 이동 (16분)', desc: '마디마다 액센트 위치 이동: 1 → e → & → a. 나머지는 탭.' },
+    shift8t: { label: '액센트 이동 (셋잇단)', desc: '마디마다 액센트 위치 이동: 1 → 2 → 3번째 음.' },
+    group: { label: '그룹핑 (N개마다 액센트)', desc: '16분 위에 N개마다 액센트. 3·5·7은 박과 어긋남.' },
+    random: { label: '랜덤 액센트', desc: '랜덤 액센트 패턴.' },
+    custom: { label: '직접 만들기', desc: '음표를 눌러 액센트 켜기·끄기.' },
   };
   const STROKE_NAME = { F: '풀', D: '다운', U: '업', T: '탭' };
 
@@ -126,25 +126,25 @@
   // ---------- 그루브 ----------
   // 16칸 = 16분음표 한 마디. x = 침, o = 오픈 하이햇, - = 쉼
   const GROOVES = [
-    { id: 'rock8', name: '기본 8비트', desc: '하이햇 8분, 스네어 2·4박, 킥 1·3박. 모든 비트의 출발점이에요.',
+    { id: 'rock8', name: '기본 8비트', desc: '하이햇 8분, 스네어 2·4박, 킥 1·3박.',
       H: 'x-x-x-x-x-x-x-x-', S: '----x-------x---', K: 'x-------x-------' },
-    { id: 'rock8b', name: '8비트 (킥 3&)', desc: '기본 8비트에 3박 뒷박(&) 킥을 더해 더 굴러가는 느낌.',
+    { id: 'rock8b', name: '8비트 (킥 3&)', desc: '기본 8비트 + 3박 뒷박 킥.',
       H: 'x-x-x-x-x-x-x-x-', S: '----x-------x---', K: 'x-------x-x-----' },
-    { id: 'rock8c', name: '8비트 (킥 2&)', desc: '2박 뒷박에 킥. 팝·록에서 정말 많이 나와요.',
+    { id: 'rock8c', name: '8비트 (킥 2&)', desc: '기본 8비트 + 2박 뒷박 킥.',
       H: 'x-x-x-x-x-x-x-x-', S: '----x-------x---', K: 'x-----x-x-------' },
-    { id: 'quarter', name: '4비트 록', desc: '하이햇을 4분음표로. 느린 곡이나 노래 도입부에 어울려요.',
+    { id: 'quarter', name: '4비트 록', desc: '하이햇 4분, 스네어 2·4박, 킥 1·3박.',
       H: 'x---x---x---x---', S: '----x-------x---', K: 'x-------x-------' },
-    { id: 'sixteen', name: '16비트', desc: '하이햇 16분 (양손 번갈아). 2·4박 스네어는 오른손으로 바꿔 치는 게 보통이에요.',
+    { id: 'sixteen', name: '16비트', desc: '하이햇 16분 (양손 교대). 2·4박 스네어는 오른손.',
       H: 'xxxxxxxxxxxxxxxx', S: '----x-------x---', K: 'x-------x-x-----' },
-    { id: 'half', name: '하프타임', desc: '스네어가 3박에만. 템포는 같아도 반으로 느려진 듯 묵직하게 들려요.',
+    { id: 'half', name: '하프타임', desc: '스네어 3박만.',
       H: 'x-x-x-x-x-x-x-x-', S: '--------x-------', K: 'x-----x---------' },
-    { id: 'disco', name: '디스코', desc: '킥 매 박(포 온 더 플로어) + 뒷박 오픈 하이햇(o).',
+    { id: 'disco', name: '디스코', desc: '킥 매 박 (포 온 더 플로어) + 뒷박 오픈 하이햇.',
       H: 'x-o-x-o-x-o-x-o-', S: '----x-------x---', K: 'x---x---x---x---' },
-    { id: 'shuffle', name: '셔플', desc: '8분음표를 셋잇단 느낌(길게-짧게)으로 튕겨서. 악보는 8분으로 쓰고 스윙으로 연주해요.', swing: true,
+    { id: 'shuffle', name: '셔플', desc: '8분음표를 셋잇단 비율(2:1)로 스윙. 표기는 8분.', swing: true,
       H: 'x-x-x-x-x-x-x-x-', S: '----x-------x---', K: 'x-------x-------' },
-    { id: 'onedrop', name: '원 드롭 (레게)', desc: '1박을 비우고 3박에 킥과 스네어를 함께. 여유 있게.',
+    { id: 'onedrop', name: '원 드롭 (레게)', desc: '1박 비움. 3박에 킥과 스네어.',
       H: 'x-x-x-x-x-x-x-x-', S: '--------x-------', K: '--------x-------' },
-    { id: 'synco', name: '싱코페이션 킥', desc: '킥이 박과 박 사이(e·a)에도 들어가는 펑키한 패턴.',
+    { id: 'synco', name: '싱코페이션 킥', desc: '킥이 e·a 자리에도 들어가는 패턴.',
       H: 'x-x-x-x-x-x-x-x-', S: '----x-------x---', K: 'x--x--x---x-----' },
   ];
   const COUNT16 = ['', 'e', '&', 'a'];
@@ -473,7 +473,7 @@
   }
 
   // ---------- 탭 ----------
-  const MODES = { rud: '루디먼트', acc: '악센트', groove: '그루브', read: '리딩' };
+  const MODES = { rud: '루디먼트', acc: '액센트', groove: '그루브', read: '리딩' };
 
   function init({ settings, persist }) {
     const saved = settings.drum || {};
@@ -543,7 +543,7 @@
       reading.forEach((n) => { n.labels = [st.readCount ? { text: countLabel(n.t), cls: 'c' } : null]; });
       return {
         staff: 'one', name: '리딩 연습', notes: reading, level: () => 0.7,
-        desc: '악보를 먼저 보고 소리 내어 세어 본 뒤 들어 보며 확인하세요. 🎲로 새 문제를 만들 수 있어요.',
+        desc: '랜덤 리듬 악보.',
       };
     }
 
@@ -592,25 +592,25 @@
       el.ladder.checked = st.ladder;
       el.ladderStep.value = st.ladderStep;
       el.ladderMax.value = st.ladderMax;
-      el.play.innerHTML = run.on ? '■ 멈추기 <kbd>Space</kbd>' : '▶ 들어보기 <kbd>Space</kbd>';
+      el.play.innerHTML = run.on ? '■ 정지 <kbd>Space</kbd>' : '▶ 재생 <kbd>Space</kbd>';
     }
 
     function legend() {
       const hands = '<span><b class="r">R</b> 오른손</span><span><b class="l">L</b> 왼손</span>';
       if (st.mode === 'rud') {
         return `${hands}<span><b class="k">K</b> 킥 (줄 아래 음표)</span><span><b>&gt;</b> 액센트</span>` +
-          '<span><b>♪</b> 작은 음표 = 꾸밈음 (플램 1개, 드래그 2개)</span><span>오른손 소리는 오른쪽, 왼손 소리는 왼쪽에서 들려요</span>';
+          '<span><b>♪</b> 작은 음표: 꾸밈음 (플램 1개, 드래그 2개)</span><span>오른손 소리는 오른쪽, 왼손 소리는 왼쪽</span>';
       }
       if (st.mode === 'acc') {
         return `${hands}<span><b>&gt;</b> 액센트 (세게)</span>` +
           (st.strokes ? Object.entries(STROKE_NAME).map(([k, v]) => `<span><b class="s-${k}">${k}</b> ${v}${{
-            F: ' (높이 들어 세게, 다시 높이)', D: ' (높이에서 세게, 낮게 멈춤)', U: ' (낮게 작게, 치면서 들어올림)', T: ' (낮게 작게, 낮게 유지)',
-          }[k]}</span>`).join('') : '') + '<span>음표를 눌러 액센트를 켜고 끌 수 있어요</span>';
+            F: ' (높음 → 높음)', D: ' (높음 → 낮음)', U: ' (낮음 → 높음)', T: ' (낮음 → 낮음)',
+          }[k]}</span>`).join('') : '') + '<span>음표 클릭: 액센트 켜기·끄기</span>';
       }
       if (st.mode === 'groove') {
-        return '<span><b>×</b> 하이햇 (맨 위)</span><span><b>×°</b> 오픈 하이햇</span><span><b>●</b> 스네어 (가운데)</span><span><b>●</b> 킥 (맨 아래)</span><span>아래 숫자는 세는 법 (1 e & a)</span>';
+        return '<span><b>×</b> 하이햇 (맨 위)</span><span><b>×°</b> 오픈 하이햇</span><span><b>●</b> 스네어 (가운데)</span><span><b>●</b> 킥 (맨 아래)</span><span>아래 숫자: 카운트 (1 e & a)</span>';
       }
-      return '<span>점음표 = 1.5배 길이</span><span>빈 머리 = 2분음표 (두 박)</span><span>아래 숫자는 세는 법 (1 e & a)</span>';
+      return '<span>점음표: 1.5배 길이</span><span>빈 머리: 2분음표</span><span>아래 숫자: 카운트 (1 e & a)</span>';
     }
 
     // ---------- 재생 ----------
@@ -732,7 +732,7 @@
     el.readCount.addEventListener('change', () => { const v = el.readCount.checked; change(() => { st.readCount = v; }); });
     el.readNew.addEventListener('click', () => change(() => { reading = null; }));
 
-    // 악센트: 음표를 눌러 액센트 켜고 끄기 → 직접 만들기로 전환
+    // 액센트: 음표를 눌러 액센트 켜고 끄기 → 직접 만들기로 전환
     el.score.addEventListener('click', (e) => {
       if (st.mode !== 'acc') return;
       const g = e.target.closest('.d-note');

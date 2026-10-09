@@ -42,11 +42,11 @@
   };
   // 위 줄: 분류, 아래 줄: 그 분류의 탭
   const GROUPS = [
-    { id: 'guitar', label: '🎸 기타 연습', drills: ['note', 'tones', 'strum', 'change', 'board', 'scale', 'triad', 'interval'] },
-    { id: 'theory', label: '🎹 이론·귀', drills: ['piano', 'ear', 'staff', 'guide', 'analyze'] },
-    { id: 'jam', label: '🎶 합주', drills: ['jam'] },
-    { id: 'drum', label: '🥁 드럼', drills: ['drum'] },
-    { id: 'stats', label: '📈 기록', drills: ['stats'] },
+    { id: 'guitar', label: '기타 연습', drills: ['note', 'tones', 'strum', 'change', 'board', 'scale', 'triad', 'interval'] },
+    { id: 'theory', label: '이론·귀', drills: ['piano', 'ear', 'staff', 'guide', 'analyze'] },
+    { id: 'jam', label: '합주', drills: ['jam'] },
+    { id: 'drum', label: '드럼', drills: ['drum'] },
+    { id: 'stats', label: '기록', drills: ['stats'] },
   ];
   const groupOf = (drill) => GROUPS.find((g) => g.drills.includes(drill)) || GROUPS[0];
   const MIC_FREE = new Set(['board', 'piano']); // 화면을 눌러서 답하는 모드
@@ -234,8 +234,8 @@
     if (!pool.length) {
       question = null;
       phase = 'idle';
-      const why = isChordDrill() ? '코드 종류나 운지 형태를 바꿔 보세요. (E폼 바레에는 sus2·dim·aug가 없어요)' : '줄/프렛 범위를 확인하세요.';
-      showPrompt('', '–', `설정에 맞는 문제가 없어요. ${why}`);
+      const why = isChordDrill() ? '코드 종류·운지 형태 확인 (E폼 바레에는 sus2·dim·aug 없음)' : '줄·프렛 범위 확인';
+      showPrompt('', '–', `출제할 문제 없음: ${why}`);
       renderTones();
       renderBoard();
       return;
@@ -250,31 +250,31 @@
     strum.armed = false; // 이전 문제의 소리가 울리는 중일 수 있으니 새로 칠 때까지 대기
 
     if (!isChordDrill()) {
-      const how = !isBoard() ? '기타로 쳐보세요' : item.string ? '지판에서 찾아 눌러 보세요' : '지판에서 아무 줄이나 눌러 보세요';
+      const how = !isBoard() ? '기타로 치기' : '지판에서 누르기';
       showPrompt(item.string ? `${item.string}번 줄` : '아무 줄에서나', noteName(item.pc, acc), how);
     } else {
       question.chord = FretChords.build(item.rootPc, item.type, acc, settings.naming);
       if (settings.drill === 'tones') {
         showPrompt(
-          settings.inOrder ? '구성음을 순서대로 하나씩' : '구성음을 하나씩 (아무 순서로)',
+          settings.inOrder ? '구성음 · 순서대로' : '구성음 · 순서 무관',
           question.chord.name,
-          '한 음씩 쳐보세요',
+          '한 음씩 치기',
         );
       } else if (isBoard()) {
         showPrompt(
-          settings.inOrder ? '지판에서 구성음을 순서대로' : '지판에서 구성음 찾기',
+          settings.inOrder ? '구성음 · 순서대로' : '구성음 · 순서 무관',
           question.chord.name,
-          '구성음 자리를 지판에서 눌러 보세요',
+          '지판에서 누르기',
         );
       } else if (isPiano()) {
         showPrompt(
-          settings.inOrder ? '건반으로 구성음을 순서대로' : '건반으로 구성음 완성하기',
+          settings.inOrder ? '구성음 · 순서대로' : '구성음 · 순서 무관',
           question.chord.name,
-          '건반을 눌러 보세요',
+          '건반 누르기',
         );
       } else {
-        const form = item.form ? FretChords.FORMS[item.form].label : '운지 자유';
-        showPrompt(form, question.chord.name, '코드를 잡고 한 번에 스트럼 해보세요');
+        const form = item.form ? FretChords.FORMS[item.form].label : '운지 무관';
+        showPrompt(form, question.chord.name, '코드 잡고 스트럼');
       }
     }
     renderTones();
@@ -363,12 +363,12 @@
     const hits = question.targets.filter((t) => t.midi === midi);
     if (hits.length) {
       const where = hits.map((t) => `${t.s}번 줄 ${t.f}프렛`).join(', ');
-      finishCorrect(`정답! ${where}`, question.targets.map((t) => ({ ...t, cls: t.midi === midi ? 'correct' : 'answer' })), CORRECT_DELAY_MS);
+      finishCorrect(`정답 · ${where}`, question.targets.map((t) => ({ ...t, cls: t.midi === midi ? 'correct' : 'answer' })), CORRECT_DELAY_MS);
       return;
     }
 
     if (!countMistake(midi)) return;
-    setStatus(`${noteNameWithOctave(midi)} — 다시 해보세요`, 'wrong');
+    setStatus(`오답: ${noteNameWithOctave(midi)}`, 'wrong');
     // 지정된 줄 위에서 친 음이라면 어디였는지 표시
     const marks = [];
     if (question.string) {
@@ -387,11 +387,11 @@
 
     const expected = tones.findIndex((_, i) => !question.found.has(i));
     if (idx < 0) {
-      if (countMistake(pc)) setStatus(`${noteNameWithOctave(midi)} — ${question.chord.name}의 구성음이 아니에요`, 'wrong');
+      if (countMistake(pc)) setStatus(`오답: ${noteNameWithOctave(midi)} (${question.chord.name} 구성음 아님)`, 'wrong');
       return;
     }
     if (settings.inOrder && idx !== expected) {
-      if (countMistake(pc)) setStatus(`순서대로: 먼저 ${tones[expected].role}음을 찾으세요`, 'wrong');
+      if (countMistake(pc)) setStatus(`순서 오류: ${tones[expected].role}음 먼저`, 'wrong');
       return;
     }
 
@@ -402,11 +402,11 @@
     renderTones();
 
     if (question.found.size === tones.length) {
-      finishCorrect(`완성! ${question.chord.name} = ${tones.map((t) => t.name).join(' · ')}`, answerMarks(), CHORD_DELAY_MS);
+      finishCorrect(`완성 · ${question.chord.name} = ${tones.map((t) => t.name).join(' · ')}`, answerMarks(), CHORD_DELAY_MS);
       return;
     }
     const left = tones.length - question.found.size;
-    setStatus(`${tone.role}음 ${tone.name} ✓ — ${left}개 남음`);
+    setStatus(`${tone.role}음 ${tone.name} · ${left}개 남음`);
     renderBoard(question.hinted ? hintMarks().concat(question.marks) : question.marks);
   }
 
@@ -506,12 +506,12 @@
 
     strum.armed = false;
     if (candidate === 'OK') {
-      finishCorrect(`정답! ${question.chord.name}${formWhere()} = ${question.chord.tones.map((t) => t.name).join(' · ')}`, answerMarks(), CHORD_DELAY_MS);
+      finishCorrect(`정답 · ${question.chord.name}${formWhere()} = ${question.chord.tones.map((t) => t.name).join(' · ')}`, answerMarks(), CHORD_DELAY_MS);
       return;
     }
     if (countMistake(candidate)) {
       const [r, t] = candidate.split(':');
-      setStatus(`들린 코드: ${FretChords.build(+r, t, question.acc, settings.naming).name} — 다시 쳐보세요`, 'wrong');
+      setStatus(`오답: 인식된 코드 ${FretChords.build(+r, t, question.acc, settings.naming).name}`, 'wrong');
     }
   }
 
@@ -531,7 +531,7 @@
   function giveHint() {
     if (phase !== 'ask' || !question) return;
     question.hinted = true;
-    setStatus(isPiano() ? '파란 테두리 건반이 구성음이에요' : isBoard() && !isChordDrill() ? '파란 점 자리를 눌러 보세요' : isChordDrill() ? '지판에 구성음 위치를 표시했어요 (주황 = 근음)' : '파란 점 위치를 쳐보세요', 'reveal');
+    setStatus(isPiano() ? '힌트: 파란 테두리 건반' : isChordDrill() ? '힌트: 지판의 구성음 (주황 = 근음)' : '힌트: 파란 점', 'reveal');
     if (settings.drill === 'strum') renderTones(true);
     renderChromaTargets();
     renderPiano();
@@ -601,7 +601,7 @@
   // ---------- 오디오 ----------
   async function startAudio() {
     if (!navigator.mediaDevices?.getUserMedia) {
-      throw new Error('이 브라우저는 마이크 입력을 지원하지 않아요.');
+      throw new Error('이 브라우저는 마이크 미지원');
     }
     // 클릭 직후(사용자 제스처 안)에 만들어야 자동재생 정책에 막히지 않음
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -782,12 +782,12 @@
     const stringOk = !question.string || question.string === s;
     if (pcOk && stringOk) {
       const marks = question.marks.concat({ s, f, midi, cls: 'correct' });
-      finishCorrect(`정답! ${s}번 줄 ${f}프렛`, marks, CORRECT_DELAY_MS);
+      finishCorrect(`정답 · ${s}번 줄 ${f}프렛`, marks, CORRECT_DELAY_MS);
       return;
     }
     countMistake(`${s}:${f}`);
-    const why = pcOk ? ` — ${question.string}번 줄에서 찾아보세요` : ' — 다시 해보세요';
-    setStatus(`${s}번 줄 ${f}프렛은 ${noteName(midi % 12, question.acc)}${why}`, 'wrong');
+    const why = pcOk ? ` (${question.string}번 줄에서)` : '';
+    setStatus(`오답: ${s}번 줄 ${f}프렛 = ${noteName(midi % 12, question.acc)}${why}`, 'wrong');
     question.marks.push({ s, f, midi, cls: 'wrong' });
     renderBoard(question.hinted ? question.marks.concat(hintMarks()) : question.marks);
   }
@@ -1111,7 +1111,7 @@
         if (audio.ctx) stopSession(); // 마이크는 필요 없으니 끔
         startClickDrill();
       } else if (fromMicFree) {
-        stopSession('시작을 누르고 마이크 사용을 허용하세요');
+        stopSession('시작을 누른 뒤 마이크 허용');
       } else if (phase !== 'idle') {
         nextQuestion();
       } else {
@@ -1274,7 +1274,7 @@
     el.sens.addEventListener('input', () => { el.sensVal.textContent = el.sens.value; settings.sensitivity = +el.sens.value; });
 
     el.reset.addEventListener('click', () => {
-      if (!confirm('지금까지 쌓인 약점 기록을 지울까요?')) return;
+      if (!confirm('약점 기록을 초기화할까요?')) return;
       stats = {};
       persist();
     });
@@ -1286,7 +1286,7 @@
   }
 
   // ---------- 시작 / 정지 ----------
-  function stopSession(message = '정지됨 — 다시 시작하려면 시작을 누르세요') {
+  function stopSession(message = '정지됨') {
     stopAudio();
     clearTimeout(nextTimer);
     phase = 'idle';
@@ -1299,7 +1299,7 @@
     el.level.style.width = '0';
     audio.chroma.fill(0);
     updateChroma(false);
-    showPrompt('', '🎸', message);
+    showPrompt('', '–', message);
     renderTones();
     renderChromaTargets();
     renderPiano();
@@ -1323,9 +1323,9 @@
       nextQuestion();
     } catch (err) {
       const msg = err.name === 'NotAllowedError'
-        ? '마이크 권한이 거부됐어요. 브라우저 주소창의 권한 설정을 확인하세요.'
-        : `마이크를 열 수 없어요: ${err.message}`;
-      showPrompt('', '🎸', msg, 'wrong');
+        ? '마이크 권한 거부됨 (주소창의 권한 설정 확인)'
+        : `마이크 오류: ${err.message}`;
+      showPrompt('', '–', msg, 'wrong');
     } finally {
       el.start.disabled = false;
     }

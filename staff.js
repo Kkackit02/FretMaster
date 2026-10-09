@@ -141,8 +141,8 @@
 
     function answerName(pc) {
       if (!q || q.done) return;
-      if (pc === q.midi % 12) correct(`정답! ${withOct(q.dn, q.acc)}`);
-      else wrong(pc, '아니에요 — 줄과 칸을 아래에서부터 세어 보세요');
+      if (pc === q.midi % 12) correct(`정답 · ${withOct(q.dn, q.acc)}`);
+      else wrong(pc, '오답');
     }
 
     // 지판에서 찾기: 정확한 소리 높이여야 정답
@@ -151,15 +151,15 @@
       if (midi === q.midi) {
         const spots = Object.entries(OPEN_MIDI).map(([str, o]) => [str, q.midi - o]).filter(([, fr]) => fr >= 0 && fr <= 15)
           .map(([str, fr]) => `${str}번 줄 ${fr}프렛`);
-        correct(`정답! ${withOct(q.dn, q.acc)} — ${spots.join(', ')}`);
+        correct(`정답 · ${withOct(q.dn, q.acc)} (${spots.join(', ')})`);
         return;
       }
       // 내가 누른 음을 오선보에 겹쳐 그려 비교
       q.ghost = { ...midiToDn(midi + 12, q.acc === -1), s, f };
       const d = midi - q.midi;
-      const hint = Math.abs(d) % 12 === 0 ? `음이름은 맞는데 ${d > 0 ? '한 옥타브 높아요' : '한 옥타브 낮아요'} (기타 악보는 소리보다 한 옥타브 높게 적어요)`
-        : `${d > 0 ? '더 낮은' : '더 높은'} 음이에요 (${Math.abs(d)}반음)`;
-      wrong(`${s}:${f}`, `${s}번 줄 ${f}프렛은 ${withOct(q.ghost.dn, q.ghost.acc)} — ${hint}`);
+      const hint = Math.abs(d) % 12 === 0 ? `옥타브 오류: 정답은 한 옥타브 ${d > 0 ? '아래' : '위'} (기타 악보는 실음보다 한 옥타브 높게 표기)`
+        : `정답은 ${Math.abs(d)}반음 ${d > 0 ? '아래' : '위'}`;
+      wrong(`${s}:${f}`, `오답: ${s}번 줄 ${f}프렛 = ${withOct(q.ghost.dn, q.ghost.acc)} · ${hint}`);
     }
 
     function giveUp() {
@@ -176,7 +176,7 @@
     // ---------- 그리기 ----------
     function render(reveal = false) {
       if (!active) return;
-      el.modes.innerHTML = [['name', '음이름 맞히기'], ['fret', '지판에서 찾기']].map(([id, label]) =>
+      el.modes.innerHTML = [['name', '음이름'], ['fret', '지판']].map(([id, label]) =>
         `<button type="button" data-mode="${id}" class="${id === st.mode ? 'on' : ''}">${label}</button>`).join('');
       el.clef.value = st.clef;
       el.range.value = st.range;
@@ -189,7 +189,7 @@
       const notes = [{ dn: q.dn, acc: q.acc, x: 150, cls: q.done ? 'right' : '' }];
       if (q.ghost && !q.done) notes.push({ dn: q.ghost.dn, acc: q.ghost.acc, x: 220, cls: 'ghost', caption: '누른 음' });
       el.staff.innerHTML = drawStaff({ clef: q.clef, notes, guitar: st.mode === 'fret' });
-      el.prompt.textContent = st.mode === 'name' ? '이 음의 이름은?' : '이 음을 기타 지판에서 찾아 누르세요';
+      el.prompt.textContent = st.mode === 'name' ? '음이름은?' : '지판에서 누르기';
 
       if (st.mode === 'name') {
         const pcs = st.acc ? [...Array(12).keys()] : LETTER_PC;

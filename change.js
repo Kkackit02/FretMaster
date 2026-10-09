@@ -55,11 +55,11 @@
 
     // ---------- 진행 ----------
     async function start() {
-      if (keyOf(st.a) === keyOf(st.b)) { msg('서로 다른 두 코드를 고르세요', 'bad'); return; }
+      if (keyOf(st.a) === keyOf(st.b)) { msg('서로 다른 코드 선택', 'bad'); return; }
       try {
         await ctx.startMic();
       } catch (err) {
-        msg(err.name === 'NotAllowedError' ? '마이크 권한이 거부됐어요' : `마이크를 열 수 없어요: ${err.message}`, 'bad');
+        msg(err.name === 'NotAllowedError' ? '마이크 권한 거부됨' : `마이크 오류: ${err.message}`, 'bad');
         return;
       }
       run.on = true;
@@ -67,32 +67,32 @@
       run.next = 0;
       run.count = 0;
       run.splits = [];
-      el.start.textContent = '■ 그만';
+      el.start.textContent = '■ 중지';
       // 3초 카운트다운 동안 첫 코드를 잡아 둠
       let n = 3;
-      msg(`${build(st.a).name} 코드를 잡고 준비… ${n}`);
+      msg(`${build(st.a).name} 준비 · ${n}`);
       render();
       run.timer = setInterval(() => {
         n--;
-        if (n > 0) { msg(`${build(st.a).name} 코드를 잡고 준비… ${n}`); return; }
+        if (n > 0) { msg(`${build(st.a).name} 준비 · ${n}`); return; }
         clearInterval(run.timer);
         run.counting = true;
         run.endAt = performance.now() + st.dur * 1000;
         run.lastHitAt = 0;
         arm();
-        msg('시작! 코드를 치세요');
+        msg('시작');
         run.timer = setInterval(tickTimer, 100);
         render();
       }, 1000);
     }
 
-    function stop(message = '그만뒀어요') {
+    function stop(message = '중지됨') {
       clearInterval(run.timer);
       const was = run.on;
       run.on = false;
       run.counting = false;
       if (was) ctx.stopMic();
-      el.start.textContent = '🎸 시작 (마이크)';
+      el.start.textContent = '시작 (마이크)';
       if (message) msg(message);
       render();
     }
@@ -112,7 +112,7 @@
       stop('');
       const perMin = Math.round((count * 60) / st.dur);
       const avg = run.splits.length ? (run.splits.reduce((a, x) => a + x, 0) / run.splits.length / 1000).toFixed(2) : null;
-      msg(`끝! ${count}번 전환 (분당 ${perMin}번)${avg ? ` · 전환 평균 ${avg}초` : ''}${count > best ? ' · 최고 기록!' : ''}`, 'good');
+      msg(`종료 · ${count}회 전환 (분당 ${perMin}회)${avg ? ` · 평균 ${avg}초` : ''}${count > best ? ' · 최고 기록' : ''}`, 'good');
       ctx.chime();
       render();
     }
@@ -196,8 +196,8 @@
       const pts = all.slice(-12).map((h) => ({ d: new Date(h.d), v: Math.round((h.n * 60) / h.dur), n: h.n, dur: h.dur }));
       const best = pts.length ? Math.max(...all.map((h) => Math.round((h.n * 60) / h.dur))) : 0;
       el.best.textContent = pts.length
-        ? `${build(st.a).name} ↔ ${build(st.b).name} 최고 기록: 분당 ${best}번 · 지금까지 ${all.length}번 도전`
-        : '아직 기록이 없어요. 첫 기록을 남겨 보세요!';
+        ? `${build(st.a).name} ↔ ${build(st.b).name} 최고: 분당 ${best}회 · 도전 ${all.length}회`
+        : '기록 없음';
       if (pts.length < 2) { el.history.innerHTML = ''; return; }
 
       // 한 줄짜리 선 그래프: 단일 시리즈라 범례 없이 제목으로 이름을 붙임
@@ -210,12 +210,12 @@
       const grid = ticks.map((t) => `<line class="ch-grid" x1="${L}" x2="${W - R}" y1="${y(t)}" y2="${y(t)}"/><text class="ch-axis" x="${L - 6}" y="${y(t) + 4}" text-anchor="end">${t}</text>`).join('');
       const line = pts.map((p, i) => `${i ? 'L' : 'M'}${x(i)} ${y(p.v)}`).join('');
       const dots = pts.map((p, i) =>
-        `<g class="ch-pt"><title>${p.d.getMonth() + 1}/${p.d.getDate()} · ${p.n}번 / ${p.dur}초 (분당 ${p.v}번)</title>` +
+        `<g class="ch-pt"><title>${p.d.getMonth() + 1}/${p.d.getDate()} · ${p.n}회 / ${p.dur}초 (분당 ${p.v}회)</title>` +
         `<rect x="${x(i) - 14}" y="${T}" width="28" height="${H - T - B}" fill="transparent"/>` +
         `<circle cx="${x(i)}" cy="${y(p.v)}" r="4.5"/></g>`).join('');
       const last = pts[pts.length - 1];
       el.history.innerHTML =
-        `<div class="g-title">기록 추이 <small>분당 전환 횟수 · 최근 ${pts.length}번</small></div>` +
+        `<div class="g-title">기록 <small>분당 전환 횟수 · 최근 ${pts.length}회</small></div>` +
         `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="코드 전환 기록 추이">${grid}` +
         `<path class="ch-line" d="${line}"/>${dots}` +
         `<text class="ch-label" x="${x(pts.length - 1)}" y="${y(last.v) - 10}" text-anchor="end">${last.v}</text></svg>`;
@@ -237,7 +237,7 @@
     el.start.addEventListener('click', () => (run.on ? stop() : start()));
 
     return {
-      activate() { active = true; msg('두 코드를 정하고 시작을 누르세요. 3초 뒤부터 시간이 흘러요'); render(); },
+      activate() { active = true; msg('코드 2개 선택 후 시작 (3초 카운트다운)'); render(); },
       deactivate() { stop(''); active = false; },
       render() { if (active) render(); },
       onFrame,

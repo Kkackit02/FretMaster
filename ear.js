@@ -11,7 +11,7 @@
   const TASKS = {
     interval: '음정 맞히기',
     chord: '코드 종류 맞히기',
-    find: '들리는 음을 지판에서 찾기',
+    find: '음 찾기 (지판)',
   };
   const NEXT_DELAY_MS = 1300;
   const rand = (n) => Math.floor(Math.random() * n);
@@ -101,7 +101,7 @@
         .map(([s, open]) => [s, q.answer - open])
         .filter(([, f]) => f >= 0 && f <= 24)
         .map(([s, f]) => `${s}번 줄 ${f}프렛`);
-      return `${ctx.noteNameWithOctave(q.answer)} — ${spots.join(', ')}`;
+      return `${ctx.noteNameWithOctave(q.answer)}: ${spots.join(', ')}`;
     }
 
     function correct() {
@@ -109,7 +109,7 @@
       const clean = q.mistakes === 0;
       ctx.score(true, clean, performance.now() - q.startedAt);
       el.msg.className = 'e-msg good';
-      el.msg.textContent = `정답! ${describe()}`;
+      el.msg.textContent = `정답 · ${describe()}`;
       if (q.kind === 'find') showAnswerOnBoard('correct');
       render();
       timer = setTimeout(next, NEXT_DELAY_MS + (q.kind === 'find' ? 600 : 0));
@@ -129,7 +129,7 @@
     function answer(value) {
       if (!q || q.done) return;
       if (value === q.answer) correct();
-      else wrong(value, '아니에요 — 다시 들어보세요');
+      else wrong(value, '오답');
     }
 
     function giveUp() {
@@ -149,8 +149,8 @@
       if (!q || q.done || q.kind !== 'find') return;
       if (midi === q.answer) { correct(); return; }
       const diff = q.answer - midi;
-      const hint = diff > 0 ? `더 높아요 (${diff}반음)` : `더 낮아요 (${-diff}반음)`;
-      wrong(midi, `${s}번 줄 ${f}프렛 (${ctx.noteNameWithOctave(midi)}) — ${hint}`);
+      const hint = diff > 0 ? `정답은 ${diff}반음 위` : `정답은 ${-diff}반음 아래`;
+      wrong(midi, `오답: ${s}번 줄 ${f}프렛 (${ctx.noteNameWithOctave(midi)}) · ${hint}`);
     }
 
     function showAnswerOnBoard(cls) {
@@ -165,16 +165,16 @@
     // ---------- 그리기 ----------
     function renderPick() {
       if (st.task === 'interval') {
-        el.pickTitle.textContent = '출제할 음정';
+        el.pickTitle.textContent = '출제 음정';
         el.pick.innerHTML = INTERVALS.map(([n, name]) =>
           `<label><input type="checkbox" value="${n}"${st.intervals.includes(n) ? ' checked' : ''}>${name}</label>`).join('');
       } else if (st.task === 'chord') {
-        el.pickTitle.textContent = '출제할 코드 종류';
+        el.pickTitle.textContent = '출제 코드 종류';
         el.pick.innerHTML = Object.entries(FretChords.TYPES).map(([id, t]) =>
           `<label><input type="checkbox" value="${id}"${st.types.includes(id) ? ' checked' : ''}>${t.label}</label>`).join('');
       } else {
         el.pickTitle.textContent = '';
-        el.pick.innerHTML = '<span class="e-note">연습할 줄·프렛 범위는 아래 설정을 따라요</span>';
+        el.pick.innerHTML = '<span class="e-note">줄·프렛 범위: 아래 설정</span>';
       }
     }
 
@@ -184,8 +184,8 @@
       el.dir.value = st.dir;
       el.dirField.hidden = st.task !== 'interval';
       el.ref.hidden = st.task !== 'find';
-      el.question.textContent = st.task === 'interval' ? '어떤 음정일까요?'
-        : st.task === 'chord' ? '어떤 코드일까요?' : '이 음을 지판에서 찾아 누르세요';
+      el.question.textContent = st.task === 'interval' ? '음정은?'
+        : st.task === 'chord' ? '코드 종류는?' : '들리는 음을 지판에서 누르기';
 
       if (!q || q.kind === 'find') {
         el.answers.innerHTML = '';

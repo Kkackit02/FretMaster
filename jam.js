@@ -211,7 +211,7 @@
       const nxt = st.prog[(run.current + 1) % st.prog.length];
       el.prog.innerHTML = st.prog.length
         ? st.prog.map((c, i) => `<div class="g-step${run.on && i === run.current ? ' playing' : ''}"><b>${build(c.rootPc, c.type).name}</b></div>`).join('')
-        : '<p class="g-empty">진행이 비어 있어요. 코드 가이드에서 만들거나 프리셋을 고르세요.</p>';
+        : '<p class="g-empty">진행 없음 (코드 가이드에서 가져오거나 프리셋 선택)</p>';
       el.now.textContent = cur ? build(cur.rootPc, cur.type).name : '–';
       el.next.textContent = nxt && st.prog.length > 1 ? build(nxt.rootPc, nxt.type).name : '';
 
@@ -222,11 +222,11 @@
       el.drums.checked = st.drums;
       el.bass.checked = st.bass;
       el.comp.value = st.comp;
-      el.play.innerHTML = run.on ? '■ 멈추기 <kbd>Space</kbd>' : '▶ 반주 시작 <kbd>Space</kbd>';
+      el.play.innerHTML = run.on ? '■ 정지 <kbd>Space</kbd>' : '▶ 재생 <kbd>Space</kbd>';
 
       const sid = scaleId();
       el.scales.innerHTML = suggestions().map((id, k) =>
-        `<button type="button" data-scale="${id}" class="${id === sid ? 'on' : ''}">${keyName({ pc: st.key.pc, mode: 'major' }).replace(/m$/, '')} ${FretScales.SCALES[id].label}${k === 0 ? ' ★' : ''}</button>`).join('');
+        `<button type="button" data-scale="${id}" class="${id === sid ? 'on' : ''}">${keyName({ pc: st.key.pc, mode: 'major' }).replace(/m$/, '')} ${FretScales.SCALES[id].label}${k === 0 ? ' (기본)' : ''}</button>`).join('');
 
       // 지판: 스케일 음 + 지금 코드의 구성음 강조
       const tones = scaleTones();
@@ -254,17 +254,17 @@
     }
 
     // ---------- 이벤트 ----------
-    el.preset.innerHTML = '<option value="">자주 쓰는 진행…</option>' +
+    el.preset.innerHTML = '<option value="">프리셋</option>' +
       FretGuide.PRESETS.map((p, i) => `<option value="${i}">${p.name}</option>`).join('');
     el.beats.innerHTML = [[2, '코드당 2박'], [4, '코드당 4박 (한 마디)'], [8, '코드당 8박 (두 마디)']].map(([v, t]) => `<option value="${v}">${t}</option>`).join('');
     el.groove.innerHTML = FretDrum.GROOVES.map((g) => `<option value="${g.id}">${g.name}</option>`).join('');
     el.comp.innerHTML = Object.entries(COMP).map(([v, t]) => `<option value="${v}">${t}</option>`).join('');
-    el.legend.innerHTML = '<span><i class="lg lg-root"></i>지금 코드의 근음</span><span><i class="lg lg-tone"></i>지금 코드의 구성음 — 여기에 머물면 잘 어울려요</span>' +
-      '<span><i class="lg lg-scale"></i>스케일 음</span><span>★ 가장 무난한 추천</span>';
+    el.legend.innerHTML = '<span><i class="lg lg-root"></i>현재 코드 근음</span><span><i class="lg lg-tone"></i>현재 코드 구성음</span>' +
+      '<span><i class="lg lg-scale"></i>스케일 음</span>';
 
     el.import.addEventListener('click', () => {
       const g = settings.guide;
-      if (!g?.prog?.length) { el.prog.innerHTML = '<p class="g-empty">코드 가이드에 만든 진행이 없어요</p>'; return; }
+      if (!g?.prog?.length) { el.prog.innerHTML = '<p class="g-empty">코드 가이드에 진행 없음</p>'; return; }
       st.prog = g.prog.map((c) => ({ ...c }));
       st.key = { ...g.key };
       save();

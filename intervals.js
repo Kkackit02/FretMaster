@@ -86,7 +86,7 @@
         ctx.score(true, q.mistakes === 0, performance.now() - q.startedAt);
         el.msg.className = 'e-msg good';
         const shape = cellsOf(q.target).map((c) => `${c.s}번 줄 ${c.f}프렛`).join(', ');
-        el.msg.textContent = `정답! ${ctx.noteNameWithOctave(q.target)} — 이 음은 ${shape}에도 있어요`;
+        el.msg.textContent = `정답 · ${ctx.noteNameWithOctave(q.target)} (같은 음: ${shape})`;
         render();
         timer = setTimeout(next, 1800);
         return;
@@ -103,7 +103,7 @@
       const iv = Math.abs(d);
       const what = iv <= 12 ? `${NAMES[iv]} ${d === 0 ? '' : d > 0 ? '위' : '아래'}` : `${iv}반음 ${d > 0 ? '위' : '아래'}`;
       el.msg.className = 'e-msg bad';
-      el.msg.textContent = `그 자리는 근음에서 ${what.trim()}예요`;
+      el.msg.textContent = `오답: 근음에서 ${what.trim()}`;
       render();
     }
 
@@ -132,7 +132,7 @@
 
       if (st.mode === 'map') {
         const root = midiAt(st.root.s, st.root.f);
-        el.prompt.innerHTML = `근음 <b>${ctx.noteNameWithOctave(root)}</b> (${st.root.s}번 줄 ${st.root.f}프렛) 둘레의 음정 — 지판을 누르면 근음이 바뀌어요`;
+        el.prompt.innerHTML = `근음 <b>${ctx.noteNameWithOctave(root)}</b> (${st.root.s}번 줄 ${st.root.f}프렛) · 지판을 누르면 근음 변경`;
         const marks = [];
         for (const s of [1, 2, 3, 4, 5, 6]) {
           for (let f = Math.max(0, st.root.f - 5); f <= Math.min(maxFret(), st.root.f + 5); f++) {
@@ -149,7 +149,7 @@
       }
 
       if (!q) { ctx.renderBoard([]); return; }
-      el.prompt.innerHTML = `<b>${ctx.noteNameWithOctave(q.root)}</b>에서 <b>${NAMES[q.iv]} ${q.down ? '아래' : '위'}</b> 음을 찍으세요`;
+      el.prompt.innerHTML = `<b>${ctx.noteNameWithOctave(q.root)}</b>에서 <b>${NAMES[q.iv]} ${q.down ? '아래' : '위'}</b>`;
       const marks = [{ s: q.s, f: q.f, midi: q.root, label: 'R', cls: 'root', still: true }];
       q.wrongMarks.forEach((m) => marks.push({ ...m, cls: 'wrong', still: true }));
       if (q.done || reveal) {

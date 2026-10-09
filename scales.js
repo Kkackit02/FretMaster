@@ -158,7 +158,7 @@
       run.wrong = new Set();
       run.startedAt = performance.now();
       el.msg.className = 's-msg';
-      el.msg.textContent = mode === 'mic' ? '기타로 다음 음을 쳐보세요' : mode === 'click' ? '지판에서 다음 음을 눌러 보세요' : '';
+      el.msg.textContent = mode === 'mic' ? '다음 음을 기타로 치기' : mode === 'click' ? '다음 음을 지판에서 누르기' : '';
       render();
       if (mode === 'listen') playNext();
     }
@@ -189,8 +189,8 @@
       const mode = run.mode;
       stopRun();
       el.msg.className = 's-msg good';
-      el.msg.textContent = `완주! ${run.items.length || sequence().length}음 · ${(ms / 1000).toFixed(1)}초 · 실수 ${run.mistakes}번` +
-        (record ? ' · 최고 기록!' : '') + (mode === 'mic' ? '' : '');
+      el.msg.textContent = `완료 · ${run.items.length || sequence().length}음 · ${(ms / 1000).toFixed(1)}초 · 실수 ${run.mistakes}회` +
+        (record ? ' · 최고 기록' : '');
       ctx.chime();
       render();
     }
@@ -208,7 +208,7 @@
       const item = run.items[run.i];
       if (midi === item.midi) { accept(); return; }
       const info = degreeInfo(midi % 12);
-      miss(midi, `${ctx.noteNameWithOctave(midi)}${info ? '' : ' (스케일 밖의 음)'} — 다음은 ${nameOf(item.midi)}`);
+      miss(midi, `오답: ${ctx.noteNameWithOctave(midi)}${info ? '' : ' (스케일 밖)'} · 다음 음 ${nameOf(item.midi)}`);
     }
 
     // 지판을 누른 자리
@@ -218,7 +218,7 @@
       // 포지션 연습이면 정확한 자리, 지판 전체면 같은 높이의 음이면 인정
       const ok = st.pos >= 0 ? item.where.some((w) => w.s === s && w.f === f) : midi === item.midi;
       if (ok) { accept(); return; }
-      miss(midi, midi === item.midi ? '같은 음이지만 이 포지션의 자리가 아니에요' : `${s}번 줄 ${f}프렛은 ${ctx.noteName(midi % 12)} — 다음은 ${nameOf(item.midi)}`);
+      miss(midi, midi === item.midi ? '같은 음, 다른 포지션' : `오답: ${s}번 줄 ${f}프렛 = ${ctx.noteName(midi % 12)} · 다음 음 ${nameOf(item.midi)}`);
     }
 
     function nameOf(midi) {
@@ -258,9 +258,9 @@
         ? `<small>다음 음</small><b>${nameOf(current.midi)}</b>${st.showPattern ? `<span>${where(current)}</span>` : ''}`
         : '';
       const best = st.best[bestKey()];
-      el.best.textContent = best ? `이 설정 최고 기록: ${(best / 1000).toFixed(1)}초 (실수 없이)` : '';
+      el.best.textContent = best ? `최고 기록: ${(best / 1000).toFixed(1)}초 (실수 0회)` : '';
 
-      el.listen.textContent = run.mode === 'listen' ? '■ 멈추기' : '▶ 들어보기';
+      el.listen.textContent = run.mode === 'listen' ? '■ 정지' : '▶ 듣기';
       el.click.classList.toggle('on', run.mode === 'click');
       el.mic.classList.toggle('on', run.mode === 'mic');
       el.stop.hidden = !run.mode || run.mode === 'listen';
@@ -277,7 +277,7 @@
         const frets = positionCells(st.root, st.type, i).map((c) => c.f);
         return `<option value="${i}">${i + 1}번 포지션 (${Math.min(...frets)}~${Math.max(...frets)}프렛)</option>`;
       }).join('') +
-        '<option value="-1">지판 전체 (프렛 범위 설정)</option>';
+        '<option value="-1">지판 전체</option>';
       el.root.value = st.root;
       el.type.value = st.type;
       el.pos.value = st.pos;
@@ -313,11 +313,11 @@
       } catch (err) {
         el.msg.className = 's-msg bad';
         el.msg.textContent = err.name === 'NotAllowedError'
-          ? '마이크 권한이 거부됐어요. 브라우저 주소창의 권한 설정을 확인하세요.'
-          : `마이크를 열 수 없어요: ${err.message}`;
+          ? '마이크 권한 거부됨 (주소창의 권한 설정 확인)'
+          : `마이크 오류: ${err.message}`;
       }
     });
-    el.stop.addEventListener('click', () => stopRun('그만뒀어요'));
+    el.stop.addEventListener('click', () => stopRun('중지됨'));
 
     return {
       activate() { active = true; renderSelects(); el.msg.textContent = ''; render(); },

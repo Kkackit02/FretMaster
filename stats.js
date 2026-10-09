@@ -43,7 +43,7 @@
 
     const step = (w) => Math.min(RAMP.length - 1, Math.floor(w * RAMP.length));
     const pct = (x) => `${Math.round(x * 100)}%`;
-    const describe = (x) => `${x.seen}번 중 ${x.clean}번 바로 정답 (${pct(1 - x.missRate)})${x.avg != null ? ` · 평균 ${(x.avg / 1000).toFixed(1)}초` : ''}`;
+    const describe = (x) => `정답률 ${pct(1 - x.missRate)} (${x.clean}/${x.seen})${x.avg != null ? ` · 평균 ${(x.avg / 1000).toFixed(1)}초` : ''}`;
 
     // ---------- 그리기 ----------
     function renderTiles() {
@@ -56,7 +56,7 @@
       el.tiles.innerHTML =
         tile(`${Math.round(today.sec / 60)}분`, '오늘 연습', `정답 ${today.ok} · 오답 ${today.bad}`) +
         tile(`${Math.round(week / 60)}분`, '최근 7일') +
-        tile(`${FretLog.streak()}일`, '연속 연습', '하루 1분 이상') +
+        tile(`${FretLog.streak()}일`, '연속 연습') +
         tile(rate, '전체 정답률', `정답 ${t.ok} · 오답 ${t.bad}`);
     }
 
@@ -100,7 +100,7 @@
           const x = cellStat(s, pc);
           const name = ctx.noteName(pc);
           if (!x) {
-            marks.push({ s, f, midi, cls: 'unseen', still: true, label: name, title: `${s}번 줄 ${f}프렛 ${name} · 아직 기록 없음` });
+            marks.push({ s, f, midi, cls: 'unseen', still: true, label: name, title: `${s}번 줄 ${f}프렛 ${name} · 기록 없음` });
             continue;
           }
           const k = step(x.weak);
@@ -111,8 +111,8 @@
         }
       }
       ctx.renderBoard(marks);
-      el.legend.innerHTML = `<span>잘함</span>${RAMP.map((c) => `<i style="background:${c}"></i>`).join('')}<span>자주 틀리거나 느림</span>` +
-        '<span class="st-unseen"><i></i>아직 안 해 본 자리</span>';
+      el.legend.innerHTML = `<span>강함</span>${RAMP.map((c) => `<i style="background:${c}"></i>`).join('')}<span>약함</span>` +
+        '<span class="st-unseen"><i></i>기록 없음</span>';
     }
 
     function renderWeak() {
@@ -131,12 +131,12 @@
           return `<div class="st-weak"><i style="background:${RAMP[step(x.weak)]}"></i><b>${x.s}번 줄 ${ctx.noteName(x.pc)}</b>` +
             `<small>${frets.join('·')}프렛</small><span>${describe(x)}</span></div>`;
         }).join('')
-        : '<p class="g-empty">아직 약한 음이 없어요 (같은 음을 두 번 이상 풀면 나타나요)</p>';
+        : '<p class="g-empty">데이터 부족 (같은 음 2회 이상 필요)</p>';
     }
 
     function renderChanges() {
       const entries = Object.entries(FretLog.changes);
-      if (!entries.length) { el.changes.innerHTML = '<p class="g-empty">코드 전환 챌린지 기록이 아직 없어요</p>'; return; }
+      if (!entries.length) { el.changes.innerHTML = '<p class="g-empty">기록 없음</p>'; return; }
       const name = (k) => {
         const [r, t] = k.split(':');
         return FretChords.build(+r, t, ctx.accFor(+r, t), settings.naming).name;
@@ -144,7 +144,7 @@
       el.changes.innerHTML = `<table class="st-table"><thead><tr><th>코드</th><th>도전</th><th>최고 (분당)</th><th>최근 (분당)</th></tr></thead><tbody>${
         entries.map(([key, list]) => {
           const perMin = list.map((h) => Math.round((h.n * 60) / h.dur));
-          return `<tr><td>${key.split('|').map(name).join(' ↔ ')}</td><td>${list.length}번</td><td>${Math.max(...perMin)}번</td><td>${perMin[perMin.length - 1]}번</td></tr>`;
+          return `<tr><td>${key.split('|').map(name).join(' ↔ ')}</td><td>${list.length}회</td><td>${Math.max(...perMin)}회</td><td>${perMin[perMin.length - 1]}회</td></tr>`;
         }).join('')}</tbody></table>`;
     }
 
@@ -165,7 +165,7 @@
       render();
     });
     el.reset.addEventListener('click', () => {
-      if (!confirm('연습 시간·정답 기록과 코드 전환 기록을 모두 지울까요? (지판 약점 기록은 설정의 "약점 기록 초기화"로 지워요)')) return;
+      if (!confirm('연습 시간·정답·코드 전환 기록을 초기화할까요? (지판 약점 기록은 설정에서 따로 초기화)')) return;
       FretLog.reset();
       render();
     });

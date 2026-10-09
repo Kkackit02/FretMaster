@@ -18,11 +18,6 @@
     { label: '2전위', order: [2, 0, 1], cls: 'inv2' },   // 5 R 3
   ];
   const MAX_FRET = 15;
-  // 받침이 있으면 '이에요', 없으면 '예요' (기본형이에요 / 1전위예요)
-  function copula(word) {
-    const code = word.charCodeAt(word.length - 1) - 0xac00;
-    return code >= 0 && code < 11172 && code % 28 !== 0 ? '이에요' : '예요';
-  }
   const rand = (n) => Math.floor(Math.random() * n);
 
   /** 줄 세트 위의 밀집 배치(한 옥타브 안) 자리를 모두 찾기 */
@@ -103,7 +98,7 @@
       const strings = SETS[q.set];
       if (!strings.includes(s)) {
         el.msg.className = 'e-msg bad';
-        el.msg.textContent = `${setLabel(q.set)}에서 찾으세요`;
+        el.msg.textContent = `${setLabel(q.set)}에서만`;
         return;
       }
       picked.set(s, { s, f, midi });
@@ -120,7 +115,7 @@
         q.done = true;
         ctx.score(true, q.mistakes === 0, performance.now() - q.startedAt);
         el.msg.className = 'e-msg good';
-        el.msg.textContent = '정답!';
+        el.msg.textContent = '정답';
         timer = setTimeout(next, 1600);
         return;
       }
@@ -132,14 +127,14 @@
       const roleOf = (pc) => ROLES.find((r, k) => (q.root + QUALITIES[q.quality].semis[k]) % 12 === pc);
       const roles = pcs.map(roleOf);
       let why;
-      if (roles.some((r) => !r)) why = `${chord.name}의 구성음이 아닌 음이 있어요`;
-      else if (new Set(roles).size < 3) why = `${roles.join('·')} — 구성음이 하나 빠졌어요`;
+      if (roles.some((r) => !r)) why = `${chord.name} 구성음 아님`;
+      else if (new Set(roles).size < 3) why = `${roles.join('·')} (구성음 누락)`;
       else {
         const inv = INVERSIONS.findIndex((x) => x.order.every((k, i) => ROLES[k] === roles[i]));
-        why = inv >= 0 ? `이건 ${INVERSIONS[inv].label}${copula(INVERSIONS[inv].label)} (아래에서부터 ${roles.join('·')})` : `아래에서부터 ${roles.join('·')} — 밀집 배치가 아니에요`;
+        why = inv >= 0 ? `${INVERSIONS[inv].label} (아래부터 ${roles.join('·')})` : `아래부터 ${roles.join('·')} (밀집 배치 아님)`;
       }
       el.msg.className = 'e-msg bad';
-      el.msg.textContent = `${why}. 다시 찍어 보세요`;
+      el.msg.textContent = `오답: ${why}`;
       picked = new Map();
     }
 
@@ -148,7 +143,7 @@
       q.done = true;
       if (!q.mistakes) ctx.score(false);
       el.msg.className = 'e-msg reveal';
-      el.msg.textContent = '정답 자리를 표시했어요';
+      el.msg.textContent = '정답 표시';
       render(true);
       timer = setTimeout(next, 2600);
     }
@@ -160,7 +155,7 @@
 
     function render(reveal = false) {
       if (!active) return;
-      el.modes.innerHTML = [['map', '지도 보기'], ['quiz', '퀴즈']].map(([id, label]) =>
+      el.modes.innerHTML = [['map', '보기'], ['quiz', '퀴즈']].map(([id, label]) =>
         `<button type="button" data-mode="${id}" class="${id === st.mode ? 'on' : ''}">${label}</button>`).join('');
       el.mapCtl.hidden = st.mode !== 'map';
       el.quizCtl.hidden = st.mode !== 'quiz';
@@ -175,7 +170,7 @@
 
       if (st.mode === 'map') {
         const chord = chordOf(st.root, st.quality);
-        el.prompt.innerHTML = `<b>${chord.name}</b> 트라이어드 · ${setLabel(st.set)} — ${chord.tones.map((t) => `${t.role} ${t.name}`).join(', ')}`;
+        el.prompt.innerHTML = `<b>${chord.name}</b> · ${setLabel(st.set)} · ${chord.tones.map((t) => `${t.role} ${t.name}`).join(', ')}`;
         const marks = [];
         INVERSIONS.forEach((inv, k) => {
           if (st.show !== -1 && st.show !== k) return;
@@ -201,11 +196,11 @@
     el.root.innerHTML = [...Array(12).keys()].map((pc) => `<option value="${pc}">${ctx.noteName(pc, ctx.accFor(pc, 'maj'))}</option>`).join('');
     el.quality.innerHTML = Object.entries(QUALITIES).map(([id, x]) => `<option value="${id}">${x.label}</option>`).join('');
     el.set.innerHTML = Object.keys(SETS).map((id) => `<option value="${id}">${setLabel(id)}</option>`).join('');
-    el.show.innerHTML = '<option value="-1">세 가지 모두</option>' + INVERSIONS.map((x, k) => `<option value="${k}">${x.label}만</option>`).join('');
+    el.show.innerHTML = '<option value="-1">전체</option>' + INVERSIONS.map((x, k) => `<option value="${k}">${x.label}만</option>`).join('');
     el.qQualities.innerHTML = Object.entries(QUALITIES).map(([id, x]) => `<label><input type="checkbox" value="${id}">${x.label}</label>`).join('');
     el.qSets.innerHTML = Object.keys(SETS).map((id) => `<label><input type="checkbox" value="${id}">${setLabel(id)}</label>`).join('');
     el.legend.innerHTML = INVERSIONS.map((x) => `<span><i class="lg lg-${x.cls}"></i>${x.label} (아래부터 ${x.order.map((k) => ROLES[k]).join('·')})</span>`).join('') +
-      '<span>밀집 배치 = 세 음이 한 옥타브 안에, 한 손 폭(4프렛) 안에서</span>';
+      '<span>밀집 배치: 세 음이 한 옥타브·4프렛 안</span>';
 
     const onMap = () => {
       st.root = +el.root.value;

@@ -16,12 +16,12 @@
 <body>
   <header class="top">
     <h1>Fret<span>Master</span></h1>
-    <button type="button" id="btn-install" class="install" hidden>⬇ 앱으로 설치</button>
+    <button type="button" id="btn-install" class="install" hidden>앱 설치</button>
     <div class="stats">
       <div><b id="st-correct">0</b><small>정답</small></div>
       <div><b id="st-wrong">0</b><small>오답</small></div>
       <div><b id="st-streak">0</b><small>연속</small></div>
-      <div><b id="st-avg">–</b><small>평균 반응</small></div>
+      <div><b id="st-avg">–</b><small>평균 시간</small></div>
     </div>
   </header>
 
@@ -53,18 +53,18 @@
           <label class="field"><span>포지션</span><select id="s-pos"></select></label>
           <label class="field"><span>방향</span>
             <select id="s-dir">
-              <option value="up">올라가기</option>
-              <option value="down">내려가기</option>
-              <option value="updown">올라갔다 내려오기</option>
+              <option value="up">상행</option>
+              <option value="down">하행</option>
+              <option value="updown">상행 후 하행</option>
             </select>
           </label>
           <label class="field"><span>지판 표시</span>
             <select id="s-label">
               <option value="name">음이름</option>
-              <option value="degree">도수 (R, ♭3, 5 …)</option>
+              <option value="degree">도수</option>
             </select>
           </label>
-          <label class="field"><span>듣기 속도</span><select id="s-bpm"></select></label>
+          <label class="field"><span>재생 속도</span><select id="s-bpm"></select></label>
         </div>
 
         <div class="s-info">
@@ -76,11 +76,11 @@
         <div class="s-msg" id="s-msg"></div>
 
         <div class="g-row s-actions">
-          <button type="button" id="s-listen">▶ 들어보기</button>
-          <button type="button" id="s-click">👆 지판으로 따라가기</button>
-          <button type="button" id="s-mic">🎸 기타로 따라 치기</button>
-          <button type="button" id="s-stop" class="ghost" hidden>그만하기</button>
-          <label class="check"><input type="checkbox" id="s-show"> 운지 보여주기</label>
+          <button type="button" id="s-listen">▶ 듣기</button>
+          <button type="button" id="s-click">지판으로 연습</button>
+          <button type="button" id="s-mic">기타로 연습 (마이크)</button>
+          <button type="button" id="s-stop" class="ghost" hidden>중지</button>
+          <label class="check"><input type="checkbox" id="s-show"> 운지 표시</label>
         </div>
         <div class="s-best" id="s-best"></div>
       </div>
@@ -88,12 +88,12 @@
       <div class="ear" id="ear">
         <div class="s-controls">
           <label class="field"><span>문제 종류</span><select id="e-task"></select></label>
-          <label class="field" id="e-dir-field"><span>들려주는 방법</span>
+          <label class="field" id="e-dir-field"><span>재생 방식</span>
             <select id="e-dir">
-              <option value="up">올라가며 (낮은 음 → 높은 음)</option>
-              <option value="down">내려가며</option>
-              <option value="together">동시에</option>
-              <option value="mixed">섞어서</option>
+              <option value="up">상행</option>
+              <option value="down">하행</option>
+              <option value="together">동시</option>
+              <option value="mixed">랜덤</option>
             </select>
           </label>
         </div>
@@ -103,9 +103,9 @@
         </div>
         <div class="e-question" id="e-question"></div>
         <div class="g-row e-tools">
-          <button type="button" id="e-replay" class="primary">🔊 다시 듣기 <kbd>Space</kbd></button>
-          <button type="button" id="e-ref">기준음 A 듣기</button>
-          <button type="button" id="e-giveup" class="ghost">모르겠어요 <kbd>H</kbd></button>
+          <button type="button" id="e-replay" class="primary">다시 듣기 <kbd>Space</kbd></button>
+          <button type="button" id="e-ref">기준음 A</button>
+          <button type="button" id="e-giveup" class="ghost">정답 보기 <kbd>H</kbd></button>
         </div>
         <div class="e-answers" id="e-answers"></div>
         <div class="e-msg" id="e-msg"></div>
@@ -117,17 +117,17 @@
           <label class="field"><span>근음</span><select id="t-root"></select></label>
           <label class="field"><span>종류</span><select id="t-quality"></select></label>
           <label class="field"><span>줄 세트</span><select id="t-set"></select></label>
-          <label class="field"><span>보기</span><select id="t-show"></select></label>
+          <label class="field"><span>표시 범위</span><select id="t-show"></select></label>
           <label class="field"><span>표시</span>
-            <select id="t-label"><option value="role">도수 (R·3·5)</option><option value="name">음이름</option></select>
+            <select id="t-label"><option value="role">도수</option><option value="name">음이름</option></select>
           </label>
         </div>
         <div class="d-ctl" id="t-quiz-ctl">
-          <div class="field"><span>출제할 종류</span><div class="chips" id="t-q-qualities"></div></div>
-          <div class="field"><span>출제할 줄 세트</span><div class="chips" id="t-q-sets"></div></div>
+          <div class="field"><span>출제 종류</span><div class="chips" id="t-q-qualities"></div></div>
+          <div class="field"><span>출제 줄 세트</span><div class="chips" id="t-q-sets"></div></div>
         </div>
         <div class="e-question small" id="t-prompt"></div>
-        <div class="g-row e-tools"><button type="button" id="t-skip" class="ghost">모르겠어요 <kbd>H</kbd></button></div>
+        <div class="g-row e-tools"><button type="button" id="t-skip" class="ghost">정답 보기 <kbd>H</kbd></button></div>
         <div class="e-msg" id="t-msg"></div>
         <div class="d-legend" id="t-legend"></div>
       </div>
@@ -137,33 +137,33 @@
         <div class="field e-pick-wrap"><span>음정</span><div class="chips" id="i-picks"></div></div>
         <div class="d-ctl d-row">
           <label class="field" id="i-dir-field"><span>방향</span>
-            <select id="i-dir"><option value="up">위로</option><option value="down">아래로</option><option value="both">섞어서</option></select>
+            <select id="i-dir"><option value="up">상행</option><option value="down">하행</option><option value="both">랜덤</option></select>
           </label>
-          <label class="check" id="i-only-field"><input type="checkbox" id="i-only"> 고른 음정만 보기</label>
+          <label class="check" id="i-only-field"><input type="checkbox" id="i-only"> 선택한 음정만</label>
         </div>
         <div class="e-question small" id="i-prompt"></div>
-        <div class="g-row e-tools"><button type="button" id="i-skip" class="ghost">모르겠어요 <kbd>H</kbd></button></div>
+        <div class="g-row e-tools"><button type="button" id="i-skip" class="ghost">정답 보기 <kbd>H</kbd></button></div>
         <div class="e-msg" id="i-msg"></div>
         <div class="d-legend">
-          <span><i class="lg lg-root"></i>근음·옥타브</span><span><i class="lg lg-tone"></i>3도</span><span><i class="lg lg-hint"></i>5도</span><span><i class="lg lg-scale"></i>그 밖의 음정</span>
-          <span>음정 모양은 줄이 바뀌어도 같고, 2번 줄(B)로 넘어갈 때만 한 칸 밀려요</span>
+          <span><i class="lg lg-root"></i>근음·옥타브</span><span><i class="lg lg-tone"></i>3도</span><span><i class="lg lg-hint"></i>5도</span><span><i class="lg lg-scale"></i>나머지</span>
+          <span>같은 음정은 어느 줄에서나 같은 모양. 2번 줄(B)을 넘을 때만 1프렛 이동</span>
         </div>
       </div>
 
       <div class="page jam" id="jam">
         <div class="d-ctl d-row">
-          <button type="button" id="j-import">⤵ 코드 가이드 진행 가져오기</button>
+          <button type="button" id="j-import">코드 가이드에서 가져오기</button>
           <label class="field"><span>프리셋</span><select id="j-preset"></select></label>
-          <label class="field"><span>키 (바꾸면 진행도 조옮김)</span><select id="j-key"></select></label>
+          <label class="field"><span>키</span><select id="j-key"></select></label>
         </div>
         <div class="g-prog" id="j-prog"></div>
         <div class="j-now">
-          <div><small>지금</small><b id="j-now"></b></div>
+          <div><small>현재</small><b id="j-now"></b></div>
           <div class="j-next"><small>다음</small><b id="j-next"></b></div>
           <div class="m-dots" id="j-dots"></div>
         </div>
         <div class="g-row s-actions">
-          <button type="button" id="j-play" class="primary">▶ 반주 시작</button>
+          <button type="button" id="j-play" class="primary">▶ 재생</button>
           <div class="m-bpm">
             <button type="button" id="j-down" aria-label="느리게">−</button>
             <input type="number" id="j-bpm" min="40" max="220"> <small>BPM</small>
@@ -176,7 +176,7 @@
           <select id="j-comp" aria-label="코드 반주"></select>
         </div>
         <div class="j-scales">
-          <div class="g-title">이 진행 위에서 쓸 스케일</div>
+          <div class="g-title">추천 스케일</div>
           <div class="g-pills" id="j-scales"></div>
         </div>
         <div class="d-legend" id="j-legend"></div>
@@ -190,25 +190,25 @@
         </div>
         <div class="d-list c-presets" id="c-presets"></div>
         <div class="c-stage">
-          <div><small>지금 칠 코드</small><b id="c-target"></b></div>
-          <div><small>전환</small><b id="c-count" class="c-count">0</b></div>
+          <div><small>현재 코드</small><b id="c-target"></b></div>
+          <div><small>전환 횟수</small><b id="c-count" class="c-count">0</b></div>
           <div><small>남은 시간</small><b id="c-time"></b></div>
         </div>
         <div class="e-msg" id="c-msg"></div>
-        <div class="g-row s-actions"><button type="button" id="c-start" class="primary">🎸 시작 (마이크)</button></div>
+        <div class="g-row s-actions"><button type="button" id="c-start" class="primary">시작 (마이크)</button></div>
         <div class="c-best" id="c-best"></div>
         <div class="ch-wrap" id="c-history"></div>
-        <div class="d-legend"><span>한 코드를 칠 때마다 판정해서, 다른 코드로 바꿔 치면 1번으로 세요</span><span>지판에는 다음에 칠 코드의 운지가 나와요</span></div>
+        <div class="d-legend"><span>코드가 바뀔 때마다 1회</span><span>지판: 다음 코드 운지</span></div>
       </div>
 
       <div class="page logpage" id="stats">
         <div class="st-tiles" id="s2-tiles"></div>
         <div class="ch-wrap">
-          <div class="g-title">최근 14일 연습 시간 <small>분 · 막대에 마우스를 올리면 자세히</small></div>
+          <div class="g-title">최근 14일 연습 시간 <small>단위: 분</small></div>
           <div id="s2-days"></div>
         </div>
         <div class="st-heat-head">
-          <div class="g-title">지판 약점 지도 <small>아래 지판 · 칸에 마우스를 올리면 자세히</small></div>
+          <div class="g-title">지판 히트맵 <small>아래 지판</small></div>
           <label class="g-inline">기준 <select id="s2-source">
             <option value="all">단음 + 지판 찍기</option>
             <option value="note">단음 (마이크)</option>
@@ -217,10 +217,10 @@
         </div>
         <div class="st-legend" id="s2-legend"></div>
         <div class="st-cols">
-          <div><div class="g-title">가장 약한 음</div><div id="s2-weak"></div></div>
+          <div><div class="g-title">약한 음</div><div id="s2-weak"></div></div>
           <div><div class="g-title">코드 전환 기록</div><div id="s2-changes"></div></div>
         </div>
-        <button type="button" id="s2-reset" class="ghost">연습 시간·전환 기록 지우기</button>
+        <button type="button" id="s2-reset" class="ghost">기록 초기화</button>
       </div>
 
       <div class="page staffpage" id="staff">
@@ -234,20 +234,20 @@
         <div class="e-question small" id="sf-prompt"></div>
         <div class="e-answers sf-answers" id="sf-answers"></div>
         <div class="g-row e-tools">
-          <button type="button" id="sf-listen">🔊 소리 듣기</button>
-          <button type="button" id="sf-skip" class="ghost">모르겠어요 <kbd>H</kbd></button>
+          <button type="button" id="sf-listen">소리 듣기</button>
+          <button type="button" id="sf-skip" class="ghost">정답 보기 <kbd>H</kbd></button>
         </div>
         <div class="e-msg" id="sf-msg"></div>
         <div class="d-legend" id="sf-note">
-          <span>기타 악보는 실제 소리보다 한 옥타브 높게 적어요 (높은음자리표 아래 작은 8). 그래서 오선 맨 아래 줄 미(E4)는 기타 4번 줄 2프렛 소리예요</span>
+          <span>기타 악보는 실음보다 한 옥타브 높게 표기 (높은음자리표 아래 8). 예: 첫째 줄 E4 = 4번 줄 2프렛</span>
         </div>
       </div>
 
       <div class="page analyzepage" id="analyze">
         <div class="a-input">
-          <textarea id="a-text" rows="2" spellcheck="false" placeholder="코드를 띄어쓰기로 입력하세요. 예) Am F C G   /   C | G/B | Am7 | F"></textarea>
+          <textarea id="a-text" rows="2" spellcheck="false" placeholder="예: Am F C G 또는 C | G/B | Am7 | F"></textarea>
           <div class="g-row">
-            <button type="button" id="a-run" class="primary">분석하기 <kbd>Enter</kbd></button>
+            <button type="button" id="a-run" class="primary">분석 <kbd>Enter</kbd></button>
             <select id="a-examples" aria-label="예시"></select>
           </div>
         </div>
@@ -260,10 +260,10 @@
         <div class="a-notes" id="a-notes"></div>
         <div class="a-tools">
           <div class="field"><span>조옮김</span><select id="a-shift"></select><div class="a-transposed" id="a-transposed"></div></div>
-          <div class="field"><span>카포로 쉽게 치기 (자주 쓰는 코드 모양으로)</span><div class="a-capo" id="a-capo"></div></div>
+          <div class="field"><span>카포 추천</span><div class="a-capo" id="a-capo"></div></div>
         </div>
         <div class="g-row s-actions">
-          <button type="button" id="a-to-jam">🎶 잼 트랙에서 반주</button>
+          <button type="button" id="a-to-jam">잼 트랙으로 보내기</button>
           <button type="button" id="a-to-guide">코드 가이드로 보내기</button>
         </div>
         <div class="d-legend" id="a-legend"></div>
@@ -281,7 +281,7 @@
           <label class="field"><span>연습</span><select id="d-acc-type"></select></label>
           <label class="field" id="d-acc-n-field"><span>몇 개마다</span><select id="d-acc-n"></select></label>
           <label class="field"><span>스티킹</span><select id="d-acc-stick"></select></label>
-          <button type="button" id="d-acc-new">🎲 새로 만들기</button>
+          <button type="button" id="d-acc-new">새로 만들기</button>
           <label class="check"><input type="checkbox" id="d-acc-strokes"> 업·다운 스트로크 표시</label>
         </div>
 
@@ -293,15 +293,15 @@
           <label class="field"><span>난이도</span>
             <select id="d-read-level">
               <option value="easy">쉬움 (4분·8분·2분)</option>
-              <option value="mid">보통 (+ 점4분·싱코페이션)</option>
-              <option value="hard">어려움 (+ 16분 조합)</option>
+              <option value="mid">보통 (점4분·싱코페이션 추가)</option>
+              <option value="hard">어려움 (16분 추가)</option>
             </select>
           </label>
           <label class="field"><span>길이</span>
             <select id="d-read-bars"><option value="2">2마디</option><option value="4">4마디</option></select>
           </label>
           <label class="check"><input type="checkbox" id="d-read-count"> 세는 법 표시</label>
-          <button type="button" id="d-read-new" class="primary">🎲 새 문제</button>
+          <button type="button" id="d-read-new" class="primary">새 문제</button>
         </div>
 
         <div class="d-head">
@@ -310,7 +310,7 @@
         </div>
         <div class="d-score" id="d-score"></div>
         <div class="g-row s-actions">
-          <button type="button" id="d-play" class="primary">▶ 들어보기</button>
+          <button type="button" id="d-play" class="primary">▶ 재생</button>
           <div class="m-bpm">
             <button type="button" id="d-down" aria-label="느리게">−</button>
             <input type="number" id="d-bpm" min="30" max="260"> <small>BPM</small>
@@ -319,7 +319,7 @@
           <label class="check"><input type="checkbox" id="d-loop"> 반복</label>
           <label class="check"><input type="checkbox" id="d-click"> 박자 클릭</label>
           <span class="d-ladder">
-            <label class="check"><input type="checkbox" id="d-ladder"> 템포 계단: 반복마다</label>
+            <label class="check"><input type="checkbox" id="d-ladder"> 반복마다 템포 올리기</label>
             <select id="d-ladder-step"></select>
             <label class="m-max">최대 <input type="number" id="d-ladder-max" min="30" max="260"></label>
           </span>
@@ -333,7 +333,7 @@
             <svg id="g-circle" viewBox="0 0 340 340" role="img" aria-label="5도권"></svg>
             <div class="g-row">
               <label class="g-inline">키 <select id="g-key"></select></label>
-              <label class="check"><input type="checkbox" id="g-sevenths"> 7화음으로</label>
+              <label class="check"><input type="checkbox" id="g-sevenths"> 7화음</label>
             </div>
           </div>
 
@@ -343,19 +343,19 @@
               <div class="prompt-tones" id="g-tones"></div>
               <div class="g-pills" id="g-types"></div>
               <div class="g-pills" id="g-forms"></div>
-              <div class="g-legend" id="g-legend" hidden>초록 = 3음 (또는 sus의 2·4음) · 파랑 = 7음</div>
+              <div class="g-legend" id="g-legend" hidden>초록: 3음 (sus는 2·4음) · 파랑: 7음</div>
               <div class="g-row">
-                <button type="button" id="g-listen">▶ 들어보기</button>
-                <button type="button" id="g-add">＋ 진행에 추가</button>
-                <button type="button" id="g-setkey" class="ghost">이 코드를 키로</button>
+                <button type="button" id="g-listen">▶ 듣기</button>
+                <button type="button" id="g-add">진행에 추가</button>
+                <button type="button" id="g-setkey" class="ghost">키로 설정</button>
               </div>
             </div>
             <div class="g-block">
-              <div class="g-title">이 키의 코드 (다이어토닉)</div>
+              <div class="g-title">다이어토닉 코드</div>
               <div class="g-chords" id="g-diatonic"></div>
             </div>
             <div class="g-block">
-              <div class="g-title">다음에 오기 좋은 코드</div>
+              <div class="g-title">다음 코드 추천</div>
               <div class="g-chords" id="g-suggest"></div>
             </div>
           </div>
@@ -375,12 +375,12 @@
           </div>
           <div class="g-prog" id="g-prog"></div>
           <div class="g-row g-gt-row">
-            <button type="button" id="g-gt">🎯 가이드톤 연습</button>
+            <button type="button" id="g-gt">가이드톤 연습</button>
             <select id="g-gt-input" aria-label="입력 방법">
-              <option value="click">지판을 눌러서</option>
-              <option value="mic">기타로 쳐서 (마이크)</option>
+              <option value="click">지판 클릭</option>
+              <option value="mic">기타 (마이크)</option>
             </select>
-            <label class="check"><input type="checkbox" id="g-gt-timed"> 템포에 맞춰 넘어가기</label>
+            <label class="check"><input type="checkbox" id="g-gt-timed"> 템포에 맞춰 진행</label>
             <span class="g-gt-msg" id="g-gt-msg"></span>
           </div>
           <div class="g-flow" id="g-flow"></div>
@@ -389,9 +389,9 @@
 
       <div class="prompt" id="prompt">
         <div class="prompt-string" id="prompt-string">&nbsp;</div>
-        <div class="prompt-note" id="prompt-note">🎸</div>
+        <div class="prompt-note" id="prompt-note">–</div>
         <div class="prompt-tones" id="prompt-tones"></div>
-        <div class="prompt-status" id="status">시작을 누르고 마이크 사용을 허용하세요</div>
+        <div class="prompt-status" id="status">시작을 누른 뒤 마이크 허용</div>
       </div>
 
       <div class="controls">
@@ -424,24 +424,24 @@
         <label class="field" data-for="board">
           <span>문제 종류</span>
           <select id="set-board-task">
-            <option value="note">음 위치 (예: 3번 줄 A)</option>
-            <option value="chord">코드 구성음 (예: Am7 → A·C·E·G)</option>
+            <option value="note">음 위치</option>
+            <option value="chord">코드 구성음</option>
           </select>
         </label>
 
         <label class="field" data-for="note board">
           <span>출제 방식</span>
           <select id="set-mode">
-            <option value="string">줄 + 음이름 (예: 3번 줄 A)</option>
-            <option value="any">음이름만 (아무 줄에서나)</option>
+            <option value="string">줄 + 음이름</option>
+            <option value="any">음이름만</option>
           </select>
         </label>
 
         <label class="field" data-for="tones strum board piano">
           <span>코드 범위</span>
           <select id="set-chordset">
-            <option value="common">자주 쓰는 코드 (오픈 코드 기준)</option>
-            <option value="all">모든 근음 (12키 전부)</option>
+            <option value="common">자주 쓰는 코드</option>
+            <option value="all">12키 전체</option>
           </select>
         </label>
 
@@ -479,10 +479,10 @@
         <label class="field">
           <span>변화음 표기</span>
           <select id="set-accidental">
-            <option value="auto">관용 표기 (B♭, F♯, C♯m …)</option>
-            <option value="sharp">♯ (샵)</option>
-            <option value="flat">♭ (플랫)</option>
-            <option value="mixed">섞어서</option>
+            <option value="auto">관용 표기</option>
+            <option value="sharp">♯</option>
+            <option value="flat">♭</option>
+            <option value="mixed">랜덤</option>
           </select>
         </label>
 
@@ -492,9 +492,9 @@
         </label>
 
         <div class="field checks">
-          <label class="check"><input type="checkbox" id="set-natural"> 자연음만 (♯/♭ 제외, 코드는 근음 기준)</label>
+          <label class="check"><input type="checkbox" id="set-natural"> 자연음만</label>
           <label class="check" data-for="piano"><input type="checkbox" id="set-piano-labels"> 건반에 음이름 표시</label>
-          <label class="check" data-for="tones board piano"><input type="checkbox" id="set-inorder"> 구성음 순서대로 (R → 3 → 5 → 7)</label>
+          <label class="check" data-for="tones board piano"><input type="checkbox" id="set-inorder"> 순서대로 (R→3→5→7)</label>
           <label class="check"><input type="checkbox" id="set-weak"> 약한 음 자주 출제</label>
           <label class="check"><input type="checkbox" id="set-sound"> 정답 효과음</label>
         </div>

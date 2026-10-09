@@ -146,11 +146,11 @@
         out.push({ label, rootPc, type });
       };
       const r = from.rootPc;
-      push('5도 아래로 (해결)', (r + 5) % 12, qualityFor((r + 5) % 12, null));
-      push('5도 위로', (r + 7) % 12, qualityFor((r + 7) % 12, null));
+      push('5도 아래', (r + 5) % 12, qualityFor((r + 5) % 12, null));
+      push('5도 위', (r + 7) % 12, qualityFor((r + 7) % 12, null));
       if (MINOR_LIKE.has(from.type)) push('관계 장조', (r + 3) % 12, st.sevenths ? 'maj7' : 'maj');
       else push('관계 단조', (r + 9) % 12, st.sevenths ? 'min7' : 'min');
-      push('이 코드로 가는 V7', (r + 7) % 12, 'dom7');
+      push('V7 (이 코드로)', (r + 7) % 12, 'dom7');
       return out;
     }
 
@@ -218,7 +218,7 @@
     }
 
     async function startGT() {
-      if (!st.prog.length) { gtMsg('먼저 코드 진행을 만들어 주세요', 'bad'); return; }
+      if (!st.prog.length) { gtMsg('코드 진행 없음', 'bad'); return; }
       stopPlay();
       stopGT(false);
       gt.input = el.gtInput.value;
@@ -226,14 +226,14 @@
         try {
           await ctx.startMic();
         } catch (err) {
-          gtMsg(err.name === 'NotAllowedError' ? '마이크 권한이 거부됐어요' : `마이크를 열 수 없어요: ${err.message}`, 'bad');
+          gtMsg(err.name === 'NotAllowedError' ? '마이크 권한 거부됨' : `마이크 오류: ${err.message}`, 'bad');
           return;
         }
       }
       gt.on = true;
       gt.results = [];
       gt.mistakes = 0;
-      el.gt.textContent = '■ 그만';
+      el.gt.textContent = '■ 중지';
       enterChord(0);
     }
 
@@ -244,8 +244,8 @@
       if (was && gt.input === 'mic') ctx.stopMic();
       gt.on = false;
       gt.marks = [];
-      el.gt.textContent = '🎯 가이드톤 연습';
-      if (was && showMsg) gtMsg('그만뒀어요');
+      el.gt.textContent = '가이드톤 연습';
+      if (was && showMsg) gtMsg('중지됨');
       if (active) render();
     }
 
@@ -262,7 +262,7 @@
       gt.wrong = new Set();
       // 마이크로 연습할 땐 코드 소리를 내지 않음 (마이크가 그 소리를 들으면 안 되므로)
       select(c, { sound: gt.input === 'click' });
-      gtMsg(`${chord.name}: ${tones.map((t) => t.role).join(' · ')}음을 ${gt.input === 'mic' ? '기타로 쳐보세요' : '지판에서 눌러 보세요'}`);
+      gtMsg(`${chord.name}: ${tones.map((t) => t.role).join(' · ')}음 ${gt.input === 'mic' ? '치기' : '누르기'}`);
       if (el.gtTimed.checked) {
         const beat = 60000 / st.bpm;
         for (let b = 0; b < st.beats; b++) gt.timers.push(setTimeout(() => FretMetronome.click(b === 0), b * beat));
@@ -281,7 +281,7 @@
       const ok = gt.results.filter((r) => r === 'ok').length;
       const mistakes = gt.mistakes;
       stopGT(false);
-      gtMsg(`완료! ${st.prog.length}개 코드 중 ${ok}개 완벽 · 실수 ${mistakes}번`, 'good');
+      gtMsg(`완료 · ${st.prog.length}개 중 ${ok}개 성공 · 실수 ${mistakes}회`, 'good');
       ctx.chime();
     }
 
@@ -295,13 +295,13 @@
         gt.need.delete(pc);
         gt.marks.push(...cells.map((cell) => ({ ...cell, label: tone.name, cls: isSeventh(tone.role) ? 'hint' : 'tone', still: true })));
         if (!gt.need.size) {
-          gtMsg(`${chord.name} 완성!`, 'good');
+          gtMsg(`${chord.name} 완성`, 'good');
           if (!el.gtTimed.checked) {
             gt.results[gt.i] = 'ok';
             gt.timers.push(setTimeout(advance, 600));
           }
         } else {
-          gtMsg(`${tone.role}음 ${tone.name} ✓`);
+          gtMsg(`${tone.role}음 ${tone.name}`);
         }
         render();
         return;
@@ -309,8 +309,8 @@
       if (!gt.wrong.has(pc)) { gt.wrong.add(pc); gt.mistakes++; }
       const other = chord.tones.find((t) => t.pc === pc);
       gtMsg(other
-        ? `${other.name}는 ${other.role === 'R' ? '근' : other.role}음 — 가이드톤(3·7음)이 아니에요`
-        : `${ctx.noteName(pc)} — ${chord.name}의 구성음이 아니에요`, 'bad');
+        ? `오답: ${other.name} (${other.role === 'R' ? '근' : other.role}음, 가이드톤 아님)`
+        : `오답: ${ctx.noteName(pc)} (${chord.name} 구성음 아님)`, 'bad');
     }
 
     function positions(midi) {
@@ -373,7 +373,7 @@
     function renderViewer() {
       const chord = build(st.chord.rootPc, st.chord.type);
       el.name.textContent = chord.name;
-      el.numeral.textContent = `${keyName(st.key)} 키에서 ${numeral(st.chord.rootPc, st.chord.type)}`;
+      el.numeral.textContent = `${keyName(st.key)} 키 · ${numeral(st.chord.rootPc, st.chord.type)}`;
       const guideView = gt.on || st.form === 'guide';
       el.tones.innerHTML = chord.tones.map((t) => {
         const isGuide = GUIDE_ROLES.has(t.role);
@@ -409,7 +409,7 @@
     function renderProg() {
       el.count.textContent = st.prog.length ? `${st.prog.length}개 · ${keyName(st.key)} 키` : '';
       el.prog.innerHTML = !st.prog.length
-        ? '<p class="g-empty">5도권 원이나 위의 코드를 누르면 여기에 차례로 쌓여요</p>'
+        ? '<p class="g-empty">5도권이나 코드를 누르면 추가됨</p>'
         : st.prog.map((c, i) => {
           const chord = build(c.rootPc, c.type);
           const now = i === play.i || (gt.on && i === gt.i);
@@ -438,7 +438,7 @@
         });
         rows.push(`<div class="g-flow-row"><b>${a.name} → ${b.name}</b>${moves.join('')}</div>`);
       }
-      el.flow.innerHTML = `<div class="g-title">가이드톤 흐름 <small>반음·유지로 이어지는 선이 부드러운 진행</small></div>${rows.join('')}`;
+      el.flow.innerHTML = `<div class="g-title">가이드톤 흐름 <small>초록: 반음 이동 또는 유지</small></div>${rows.join('')}`;
     }
 
     function renderKeySelect() {
@@ -463,7 +463,7 @@
     }
 
     // ---------- 이벤트 ----------
-    el.preset.innerHTML = '<option value="">자주 쓰는 진행 불러오기…</option>' +
+    el.preset.innerHTML = '<option value="">프리셋</option>' +
       PRESETS.map((p, i) => `<option value="${i}">${p.name}</option>`).join('');
     el.bpm.innerHTML = [60, 75, 90, 105, 120, 140].map((b) => `<option value="${b}">${b} BPM</option>`).join('');
     el.beats.innerHTML = [[1, '코드당 1박'], [2, '코드당 2박'], [4, '코드당 4박 (한 마디)']]

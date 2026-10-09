@@ -30,18 +30,18 @@
   };
   const NUM_SUFFIX = { maj: '', min: '', dom7: '7', maj7: 'M7', min7: '7', sus2: 'sus2', sus4: 'sus4', dim: '°', aug: '+', m7b5: 'ø7' };
   const FUNC = {
-    T: { label: '토닉', short: 'T', desc: '안정 · 집' },
-    SD: { label: '서브도미넌트', short: 'SD', desc: '떠남 · 준비' },
-    D: { label: '도미넌트', short: 'D', desc: '긴장 · 돌아가고 싶음' },
+    T: { label: '토닉', short: 'T', desc: '안정' },
+    SD: { label: '서브도미넌트', short: 'SD', desc: '토닉에서 벗어남' },
+    D: { label: '도미넌트', short: 'D', desc: '토닉으로 해결' },
   };
 
   const EXAMPLES = [
     ['C G Am F', '팝 진행 (I–V–vi–IV)'],
-    ['Am F C G', '같은 코드, 단조로 시작'],
+    ['Am F C G', '단조 (i–VI–III–VII)'],
     ['Dm7 G7 CM7', 'ii–V–I'],
-    ['C E7 Am C7 F Fm C', '세컨더리 도미넌트 + 빌려 온 코드'],
-    ['C Bb F C', '♭VII 빌려 오기 (록)'],
-    ['Am Dm E7 Am', '단조 + 화성단음계 V'],
+    ['C E7 Am C7 F Fm C', '세컨더리 도미넌트 + 모달 인터체인지'],
+    ['C Bb F C', '♭VII (모달 인터체인지)'],
+    ['Am Dm E7 Am', '단조 + 화성단음계 V7'],
     ['A7 D7 A7 A7 D7 D7 A7 A7 E7 D7 A7 E7', '12마디 블루스'],
     ['D A Bm F#m G D G A', '캐논 진행'],
   ];
@@ -178,14 +178,14 @@
           item.kind = 'secondary';
           item.numeral = `${c.type === 'dom7' ? 'V7' : 'V'}/${numeral(key, next).replace(/(7|M7|ø7|sus\d)$/, '')}`;
           item.fn = 'D';
-          item.why = `다음 ${next.text}로 가는 도미넌트 (세컨더리 도미넌트) — ${next.text}를 잠깐 으뜸음처럼 강하게 끌어당겨요`;
+          item.why = `세컨더리 도미넌트: 다음 코드 ${next.text}의 V`;
           return item;
         }
         const iv = (c.rootPc - key.pc + 12) % 12;
         if (iv === 1 && fam(c.type) === 'maj') {
           item.kind = 'borrowed';
           item.fn = 'SD';
-          item.why = '나폴리 코드 (♭II) — 도미넌트로 가기 전 어둡고 극적인 색';
+          item.why = '나폴리 코드 (♭II): 주로 V 앞에 옴';
           return item;
         }
         const pd = diatonicOf(parallel(key), c);
@@ -194,11 +194,11 @@
           item.fn = pd.fn;
           const last = i === chords.length - 1;
           item.why = key.mode === 'minor' && isTonic(parallel(key), c) && last
-            ? '피카르디 3화음 — 단조 곡을 밝은 장3화음으로 끝맺음'
-            : `같은 으뜸음의 ${keyLabel(parallel(key))}에서 빌려 온 코드 (모달 인터체인지) — ${key.mode === 'major' ? '살짝 어둡고 아련한' : '밝은'} 색을 더해요`;
+            ? '피카르디 3화음: 단조 곡을 장3화음으로 종결'
+            : `모달 인터체인지: 같은 으뜸음의 ${keyLabel(parallel(key))}에서 차용`;
           return item;
         }
-        item.why = '키 밖의 코드 (반음계적 코드) — 전조(키 바꿈)의 신호일 수도 있어요';
+        item.why = '키 밖의 코드 (반음계적). 전조 가능성 있음';
         return item;
       });
 
@@ -207,18 +207,17 @@
       for (let i = 0; i + 1 < items.length; i++) {
         const a = items[i], b = items[i + 1];
         const an = a.numeral.replace(/7|M7|ø7/g, ''), bn = b.numeral.replace(/7|M7|ø7/g, '');
-        const end = i + 1 === items.length - 1 ? ' — 곡을 끝맺는 느낌' : '';
-        if ((an === 'V' || an === 'vii°') && (bn === 'I' || bn === 'i')) a.cadence = `정격 종지${end}`;
+        if ((an === 'V' || an === 'vii°') && (bn === 'I' || bn === 'i')) a.cadence = '정격 종지';
         else if ((an === 'IV' || an === 'iv') && (bn === 'I' || bn === 'i')) a.cadence = '변격 종지 (아멘 종지)';
-        else if (an === 'V' && (bn === 'vi' || bn === 'VI')) a.cadence = '거짓 종지 — 기대를 살짝 비켜 감';
+        else if (an === 'V' && (bn === 'vi' || bn === 'VI')) a.cadence = '거짓 종지 (V → vi)';
         if (i + 2 < items.length) {
           const cn = items[i + 2].numeral.replace(/7|M7|ø7/g, '');
-          if (/^ii°?$/.test(an) && bn === 'V' && /^(I|i)$/.test(cn)) notes.push(`${i + 1}~${i + 3}번째: ii–V–I (투파이브원) — 재즈·팝에서 가장 많이 쓰는 해결`);
+          if (/^ii°?$/.test(an) && bn === 'V' && /^(I|i)$/.test(cn)) notes.push(`${i + 1}~${i + 3}번째: ii–V–I`);
         }
       }
       const lastItem = items[items.length - 1];
-      if (lastItem && /^V/.test(lastItem.numeral) && !lastItem.numeral.includes('/')) notes.push('V로 끝남: 반종지 — 질문하듯 열린 느낌, 다음으로 이어지기 좋아요');
-      if (lastItem && isTonic(key, lastItem.c)) notes.push('으뜸화음으로 끝남 — 안정적으로 마무리돼요');
+      if (lastItem && /^V/.test(lastItem.numeral) && !lastItem.numeral.includes('/')) notes.push('반종지: V로 끝남');
+      if (lastItem && isTonic(key, lastItem.c)) notes.push('토닉으로 끝남');
       const inside = items.filter((x) => x.kind === 'diatonic').length;
       result = { chords, bad, items, notes, key, ranked, inside };
     }
@@ -230,7 +229,7 @@
       if (!result) analyze();
       const { items, bad } = result;
       if (!items.length) {
-        el.summary.innerHTML = bad.length ? `읽을 수 없는 코드: ${bad.join(', ')}` : '코드를 입력하고 분석하기를 누르세요';
+        el.summary.innerHTML = bad.length ? `인식 불가: ${bad.join(', ')}` : '코드 입력 후 분석';
         el.chords.innerHTML = el.notes.innerHTML = el.transposed.innerHTML = el.capo.innerHTML = el.alt.innerHTML = '';
         ctx.renderBoard([]);
         return;
@@ -238,10 +237,10 @@
       const { key, ranked, inside } = result;
       const auto = !st.key;
       const gap = ranked[0].score - ranked[1].score;
-      const sure = gap >= 3 ? '확실해 보여요' : gap >= 1 ? '가능성이 높아요' : '애매해요';
-      el.summary.innerHTML = `<b>${keyLabel(key)}</b>${auto ? `로 ${sure}` : ' (직접 고름)'} · ${items.length}개 중 ${inside}개가 키 안의 코드` +
-        (bad.length ? ` · 읽지 못한 것: ${bad.join(', ')}` : '') +
-        (items.some((x) => x.c.approx) ? ' · 일부 확장음(9·11·13·add 등)은 가장 가까운 코드로 분석' : '');
+      const sure = gap >= 3 ? '확신 높음' : gap >= 1 ? '확신 보통' : '확신 낮음';
+      el.summary.innerHTML = `<b>${keyLabel(key)}</b>${auto ? ` (${sure})` : ' (직접 선택)'} · 다이어토닉 ${inside}/${items.length}` +
+        (bad.length ? ` · 인식 불가: ${bad.join(', ')}` : '') +
+        (items.some((x) => x.c.approx) ? ' · 텐션(9·11·13 등)은 기본 코드로 분석' : '');
       el.key.innerHTML = '<option value="">자동</option>' +
         FIFTHS.flatMap((pc) => [{ pc, mode: 'major' }, { pc: (pc + 9) % 12, mode: 'minor' }])
           .map((k) => `<option value="${k.pc}:${k.mode}">${keyLabel(k)}</option>`).join('');
@@ -252,7 +251,7 @@
       el.chords.innerHTML = items.map((it, i) => {
         const fn = it.fn ? `<em class="fn fn-${it.fn}" title="${FUNC[it.fn].label}: ${FUNC[it.fn].desc}">${FUNC[it.fn].short}</em>` : '';
         const tag = it.kind === 'secondary' ? '<span class="a-tag">세컨더리 도미넌트</span>'
-          : it.kind === 'borrowed' ? '<span class="a-tag">빌려 온 코드</span>'
+          : it.kind === 'borrowed' ? '<span class="a-tag">모달 인터체인지</span>'
             : it.kind === 'outside' ? '<span class="a-tag out">키 밖</span>' : '';
         const cad = it.cadence ? `<div class="a-cad">→ ${it.cadence}</div>` : '';
         return `<div class="a-chord${i === st.selected ? ' on' : ''} ${it.kind}" data-i="${i}">` +
@@ -260,7 +259,7 @@
       }).join('');
       const explain = items.map((it, i) => (it.why ? `<li><b>${it.c.text} (${it.numeral})</b> ${it.why}</li>` : '')).filter(Boolean)
         .concat(result.notes.map((n) => `<li>${n}</li>`));
-      el.notes.innerHTML = explain.length ? `<ul>${explain.join('')}</ul>` : '<p class="g-empty">모두 키 안의 코드예요</p>';
+      el.notes.innerHTML = explain.length ? `<ul>${explain.join('')}</ul>` : '<p class="g-empty">모두 다이어토닉 코드</p>';
 
       renderTools();
       renderBoard();
@@ -291,7 +290,7 @@
           opts.push(`<li><b>${capo ? `카포 ${capo}프렛` : '카포 없이'}</b> ${[...new Set(shapes.map((c) => build(c, shapeKey).name))].join(' · ')}<small> (${keyLabel(shapeKey)} 모양)</small></li>`);
         }
       }
-      el.capo.innerHTML = opts.length ? `<ul>${opts.slice(0, 4).join('')}</ul>` : '<p class="g-empty">모든 코드가 오픈 코드가 되는 카포 자리가 없어요 (바레 코드를 써야 해요)</p>';
+      el.capo.innerHTML = opts.length ? `<ul>${opts.slice(0, 4).join('')}</ul>` : '<p class="g-empty">해당 카포 위치 없음 (바레 코드 필요)</p>';
     }
 
     // 고른 코드의 운지 (오픈 모양이 있으면 그것, 없으면 범위 안 구성음)
@@ -310,9 +309,9 @@
     }
 
     // ---------- 이벤트 ----------
-    el.examples.innerHTML = '<option value="">예시 불러오기…</option>' + EXAMPLES.map(([t, name], i) => `<option value="${i}">${name}: ${t}</option>`).join('');
-    el.legend.innerHTML = Object.entries(FUNC).map(([k, f]) => `<span><em class="fn fn-${k}">${f.short}</em>${f.label} — ${f.desc}</span>`).join('') +
-      '<span>코드를 누르면 지판에 운지가 나오고 소리가 나요</span>';
+    el.examples.innerHTML = '<option value="">예시</option>' + EXAMPLES.map(([t, name], i) => `<option value="${i}">${name}: ${t}</option>`).join('');
+    el.legend.innerHTML = Object.entries(FUNC).map(([k, f]) => `<span><em class="fn fn-${k}">${f.short}</em>${f.label}: ${f.desc}</span>`).join('') +
+      '<span>코드 클릭: 운지 표시·재생</span>';
     const run = () => {
       st.text = el.text.value.trim();
       st.key = null;
