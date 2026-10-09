@@ -235,7 +235,7 @@
       question = null;
       phase = 'idle';
       const why = isChordDrill() ? '코드 종류·운지 형태 확인 (E폼 바레에는 sus2·dim·aug 없음)' : '줄·프렛 범위 확인';
-      showPrompt('', '–', `출제할 문제 없음: ${why}`);
+      showPrompt('', '', `출제할 문제 없음: ${why}`);
       renderTones();
       renderBoard();
       return;
@@ -1299,7 +1299,7 @@
     el.level.style.width = '0';
     audio.chroma.fill(0);
     updateChroma(false);
-    showPrompt('', '–', message);
+    showPrompt('', '', message);
     renderTones();
     renderChromaTargets();
     renderPiano();
@@ -1325,7 +1325,7 @@
       const msg = err.name === 'NotAllowedError'
         ? '마이크 권한 거부됨 (주소창의 권한 설정 확인)'
         : `마이크 오류: ${err.message}`;
-      showPrompt('', '–', msg, 'wrong');
+      showPrompt('', '', msg, 'wrong');
     } finally {
       el.start.disabled = false;
     }
