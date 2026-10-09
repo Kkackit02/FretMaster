@@ -223,6 +223,52 @@
         <button type="button" id="s2-reset" class="ghost">연습 시간·전환 기록 지우기</button>
       </div>
 
+      <div class="page staffpage" id="staff">
+        <div class="d-modes" id="sf-modes"></div>
+        <div class="d-ctl d-row">
+          <label class="field" id="sf-clef-field"><span>자리표</span><select id="sf-clef"></select></label>
+          <label class="field" id="sf-range-field"><span>범위</span><select id="sf-range"></select></label>
+          <label class="check"><input type="checkbox" id="sf-acc"> ♯·♭ 포함</label>
+        </div>
+        <div class="sf-staff" id="sf-staff"></div>
+        <div class="e-question small" id="sf-prompt"></div>
+        <div class="e-answers sf-answers" id="sf-answers"></div>
+        <div class="g-row e-tools">
+          <button type="button" id="sf-listen">🔊 소리 듣기</button>
+          <button type="button" id="sf-skip" class="ghost">모르겠어요 <kbd>H</kbd></button>
+        </div>
+        <div class="e-msg" id="sf-msg"></div>
+        <div class="d-legend" id="sf-note">
+          <span>기타 악보는 실제 소리보다 한 옥타브 높게 적어요 (높은음자리표 아래 작은 8). 그래서 오선 맨 아래 줄 미(E4)는 기타 4번 줄 2프렛 소리예요</span>
+        </div>
+      </div>
+
+      <div class="page analyzepage" id="analyze">
+        <div class="a-input">
+          <textarea id="a-text" rows="2" spellcheck="false" placeholder="코드를 띄어쓰기로 입력하세요. 예) Am F C G   /   C | G/B | Am7 | F"></textarea>
+          <div class="g-row">
+            <button type="button" id="a-run" class="primary">분석하기 <kbd>Enter</kbd></button>
+            <select id="a-examples" aria-label="예시"></select>
+          </div>
+        </div>
+        <div class="a-summary" id="a-summary"></div>
+        <div class="g-row a-keyrow">
+          <label class="g-inline">키 <select id="a-key"></select></label>
+          <span class="a-alt" id="a-alt"></span>
+        </div>
+        <div class="a-chords" id="a-chords"></div>
+        <div class="a-notes" id="a-notes"></div>
+        <div class="a-tools">
+          <div class="field"><span>조옮김</span><select id="a-shift"></select><div class="a-transposed" id="a-transposed"></div></div>
+          <div class="field"><span>카포로 쉽게 치기 (자주 쓰는 코드 모양으로)</span><div class="a-capo" id="a-capo"></div></div>
+        </div>
+        <div class="g-row s-actions">
+          <button type="button" id="a-to-jam">🎶 잼 트랙에서 반주</button>
+          <button type="button" id="a-to-guide">코드 가이드로 보내기</button>
+        </div>
+        <div class="d-legend" id="a-legend"></div>
+      </div>
+
       <div class="drum" id="drum">
         <div class="d-modes" id="d-modes"></div>
 
@@ -474,6 +520,8 @@
   <script src="jam.js"></script>
   <script src="change.js"></script>
   <script src="stats.js"></script>
+  <script src="staff.js"></script>
+  <script src="analyze.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

@@ -543,6 +543,16 @@
       render,
       togglePlay() { if (gt.on) return; if (play.on) stopPlay(); else startPlay(); },
       onNote(midi) { if (gt.on && gt.input === 'mic') hit(midi % 12, positions(midi)); },
+      // 진행 분석기에서 보낸 진행 받기
+      setProgression(prog, key) {
+        stopPlay();
+        stopGT(false);
+        gt.results = [];
+        st.prog = prog.map((c) => ({ rootPc: c.rootPc, type: c.type }));
+        st.key = { pc: key.pc, mode: key.mode };
+        if (st.prog[0]) st.chord = { ...st.prog[0] };
+        save();
+      },
       onClick(s, f, midi) { if (gt.on && gt.input === 'click') hit(midi % 12, [{ s, f, midi }]); },
     };
   }

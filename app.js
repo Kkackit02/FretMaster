@@ -33,6 +33,8 @@
     triad: { label: '트라이어드' },
     interval: { label: '음정 모양' },
     ear:   { label: '귀 훈련' },
+    staff: { label: '오선보' },
+    analyze: { label: '진행 분석' },
     guide: { label: '코드 가이드' },
     jam:   { label: '잼 트랙' },
     drum:  { label: '드럼' },
@@ -41,7 +43,7 @@
   // 위 줄: 분류, 아래 줄: 그 분류의 탭
   const GROUPS = [
     { id: 'guitar', label: '🎸 기타 연습', drills: ['note', 'tones', 'strum', 'change', 'board', 'scale', 'triad', 'interval'] },
-    { id: 'theory', label: '🎹 이론·귀', drills: ['piano', 'ear', 'guide'] },
+    { id: 'theory', label: '🎹 이론·귀', drills: ['piano', 'ear', 'staff', 'guide', 'analyze'] },
     { id: 'jam', label: '🎶 합주', drills: ['jam'] },
     { id: 'drum', label: '🥁 드럼', drills: ['drum'] },
     { id: 'stats', label: '📈 기록', drills: ['stats'] },
@@ -106,7 +108,7 @@
   let nextTimer = null;
   let guide = null;       // 코드 가이드 (guide.js)
   let scales = null;      // 스케일 연습 (scales.js)
-  const PAGES = new Set(['guide', 'scale', 'ear', 'drum', 'triad', 'interval', 'jam', 'change', 'stats']); // 자체 화면을 가진 탭 (모듈 파일)
+  const PAGES = new Set(['guide', 'scale', 'ear', 'drum', 'triad', 'interval', 'jam', 'change', 'stats', 'staff', 'analyze']); // 자체 화면을 가진 탭 (모듈 파일)
   const pages = {};       // 탭 id → 모듈
   let pianoChord = null;  // 가이드에서 건반에 보여줄 코드
 
@@ -1148,7 +1150,9 @@
       settings, persist, noteName, noteNameWithOctave, renderBoard, playTone,
       accFor: (pc, type) => pickAccidental(pc, type, true),
       score: scoreExternal, chime: playChime, startMic: micStart, stopMic: micStop,
-      shapeMarks, getStats: () => stats,
+      shapeMarks, rangeMarks, getStats: () => stats,
+      // 진행 분석기 → 잼 트랙·코드 가이드
+      sendProgression: (target, prog, key) => { pages[target].setProgression(prog, key); switchDrill(target); },
     };
     Object.assign(pages, {
       guide, scale: scales, ear,
@@ -1158,6 +1162,8 @@
       jam: FretJam.init(common),
       change: FretChange.init(common),
       stats: FretStats.init(common),
+      staff: FretStaff.init(common),
+      analyze: FretAnalyze.init(common),
     });
     FretMetronome.init({ settings, persist });
 
@@ -1336,7 +1342,7 @@
     else if (e.code === 'Space' && settings.drill === 'drum') { e.preventDefault(); pages.drum.toggle(); }
     else if (e.code === 'Space' && settings.drill === 'jam') { e.preventDefault(); pages.jam.toggle(); }
     else if (e.code === 'Space' && settings.drill === 'change') { e.preventDefault(); pages.change.toggle(); }
-    else if (e.code === 'KeyH' && (settings.drill === 'triad' || settings.drill === 'interval')) pages[settings.drill].giveUp();
+    else if (e.code === 'KeyH' && ['triad', 'interval', 'staff'].includes(settings.drill)) pages[settings.drill].giveUp();
     else if (e.code === 'KeyH' && settings.drill === 'ear') pages.ear.giveUp();
     else if (e.code === 'Space') { e.preventDefault(); skip(); }
     else if (e.code === 'KeyH') giveHint();

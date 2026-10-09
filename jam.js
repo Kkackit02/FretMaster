@@ -309,6 +309,14 @@
       render() { if (active) { renderKeys(); render(); } },
       toggle() { if (run.on) stop(); else start(); },
       onClick() {},
+      // 진행 분석기에서 보낸 진행 받기
+      setProgression(prog, key) {
+        stop();
+        st.prog = prog.map((c) => ({ rootPc: c.rootPc, type: c.type }));
+        st.key = { pc: key.pc, mode: key.mode };
+        st.scale = null;
+        save();
+      },
     };
   }
 
