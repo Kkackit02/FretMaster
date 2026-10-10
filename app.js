@@ -34,6 +34,7 @@
     interval: { label: '음정 모양', help: '근음에서 3도·5도 등 음정 위치를 지판에서 찾기. 모양 보기 포함' },
     ear:   { label: '귀 훈련', help: '소리를 듣고 음정·코드 종류 맞히기, 들리는 음을 지판에서 찾기' },
     staff: { label: '오선보', help: '오선보 음표의 음이름 맞히기, 기타 악보의 음을 지판에서 찾기' },
+    build: { label: '코드 만들기', help: '근음 하나로 코드 종류별 만드는 법 정리. 행을 누르면 소리·건반·운지 표시' },
     analyze: { label: '진행 분석', help: '코드 진행을 입력하면 키·로마 숫자·기능 분석. 조옮김·카포 추천' },
     guide: { label: '코드 가이드', help: '코드 구성음·운지 보기, 5도권으로 코드 진행 만들고 재생' },
     jam:   { label: '잼 트랙', help: '코드 진행에 드럼·베이스 반주 재생. 추천 스케일과 현재 코드 구성음 표시' },
@@ -43,7 +44,7 @@
   // 위 줄: 분류, 아래 줄: 그 분류의 탭
   const GROUPS = [
     { id: 'guitar', label: '기타 연습', drills: ['note', 'tones', 'strum', 'change', 'board', 'scale', 'triad', 'interval'] },
-    { id: 'theory', label: '이론+청음', drills: ['piano', 'ear', 'staff', 'guide', 'analyze'] },
+    { id: 'theory', label: '이론+청음', drills: ['piano', 'ear', 'staff', 'build', 'guide', 'analyze'] },
     { id: 'jam', label: '잼 연습', drills: ['jam'] },
     { id: 'drum', label: '드럼', drills: ['drum'] },
     { id: 'stats', label: '기록', drills: ['stats'] },
@@ -111,7 +112,7 @@
   let nextTimer = null;
   let guide = null;       // 코드 가이드 (guide.js)
   let scales = null;      // 스케일 연습 (scales.js)
-  const PAGES = new Set(['guide', 'scale', 'ear', 'drum', 'triad', 'interval', 'jam', 'change', 'stats', 'staff', 'analyze']); // 자체 화면을 가진 탭 (모듈 파일)
+  const PAGES = new Set(['guide', 'scale', 'ear', 'drum', 'triad', 'interval', 'jam', 'change', 'stats', 'staff', 'analyze', 'build']); // 자체 화면을 가진 탭 (모듈 파일)
   const pages = {};       // 탭 id → 모듈
   let pianoChord = null;  // 가이드에서 건반에 보여줄 코드
 
@@ -873,7 +874,7 @@
 
   function renderPiano() {
     if (!el.piano.childElementCount) return;
-    const isGuide = settings.drill === 'guide';
+    const isGuide = settings.drill === 'guide' || settings.drill === 'build'; // 퀴즈 없이 코드를 보여주기만 하는 탭
     const chord = isGuide ? pianoChord : isPiano() ? question?.chord : null;
     const found = new Set();
     const hint = new Set();
@@ -1179,6 +1180,7 @@
       accFor: (pc, type) => pickAccidental(pc, type, true),
       score: scoreExternal, chime: playChime, startMic: micStart, stopMic: micStop,
       shapeMarks, rangeMarks, getStats: () => stats,
+      showOnPiano: (chord) => { pianoChord = chord; renderPiano(); },
       learn: () => settings.learn,
       // 진행 분석기 → 잼 트랙·코드 가이드
       sendProgression: (target, prog, key) => { pages[target].setProgression(prog, key); switchDrill(target); },
@@ -1192,6 +1194,7 @@
       change: FretChange.init(common),
       stats: FretStats.init(common),
       staff: FretStaff.init(common),
+      build: FretBuild.init(common),
       analyze: FretAnalyze.init(common),
     });
     FretMetronome.init({ settings, persist });

@@ -316,6 +316,7 @@ body[data-drill="strum"] .tuner-meter { visibility: hidden; }
   touch-action: manipulation;
 }
 body[data-drill="piano"] .piano,
+body[data-drill="build"] .piano,
 body[data-drill="guide"] .piano { display: flex; }
 body[data-drill="board"] .tuner,
 body[data-drill="board"] #btn-start,
@@ -896,3 +897,17 @@ button.link { border: 0; background: none; padding: 0 4px; color: var(--hint); t
 /* 학습 모드 설명 */
 .prompt-explain { display: grid; gap: 2px; margin-top: 8px; font-size: 14px; font-weight: 400; color: var(--hint); }
 .prompt-explain:empty { display: none; }
+
+/* ---------- 코드 만들기 ---------- */
+body[data-drill="build"] .buildpage { display: grid; }
+body[data-drill="build"] :is(.prompt, .controls, .tuner, .chroma) { display: none; }
+.b-wrap { width: 100%; overflow-x: auto; }
+.b-table { min-width: 560px; }
+.b-table tbody tr { cursor: pointer; }
+.b-table tbody tr:hover { background: var(--panel-2); }
+.b-table tbody tr.on { background: #3a3021; }
+.b-table td:first-child b { font-size: 17px; }
+.b-table td { white-space: nowrap; }
+.b-table td:nth-child(2) { white-space: normal; color: var(--muted); }
+.chg { color: var(--accent); font-weight: 700; }
+.b-detail { font-size: 15px; text-align: center; }

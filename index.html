@@ -247,6 +247,20 @@
         </div>
       </div>
 
+      <div class="page buildpage" id="build">
+        <div class="d-ctl d-row">
+          <label class="field"><span>근음</span><select id="b-root"></select></label>
+          <label class="field"><span>운지</span><select id="b-form"></select></label>
+        </div>
+        <div class="b-wrap"><table class="st-table b-table" id="b-table"></table></div>
+        <div class="prompt-explain b-detail" id="b-detail"></div>
+        <div class="d-legend">
+          <span><span class="chg">주황</span>: 메이저(R · 3 · 5)에서 바뀌거나 더한 음</span>
+          <span>반음 = 근음에서 몇 프렛 위인지</span>
+          <span>행을 누르면 소리·건반·운지 표시</span>
+        </div>
+      </div>
+
       <div class="page analyzepage" id="analyze">
         <div class="a-input">
           <textarea id="a-text" rows="2" spellcheck="false" placeholder="예: Am F C G 또는 C | G/B | Am7 | F"></textarea>
@@ -527,6 +541,7 @@
   <script src="stats.js"></script>
   <script src="staff.js"></script>
   <script src="analyze.js"></script>
+  <script src="build.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
