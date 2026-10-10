@@ -23,10 +23,11 @@
     };
     const run = { on: false, timer: 0, idx: 0, loopStart: 0, events: [], visuals: [], current: 0 };
     let active = false;
+    let skipped = []; // 직접 입력에서 읽지 못한 코드
 
     const $ = (id) => document.getElementById(id);
     const el = {
-      import: $('j-import'), preset: $('j-preset'), key: $('j-key'), prog: $('j-prog'),
+      import: $('j-import'), preset: $('j-preset'), key: $('j-key'), prog: $('j-prog'), input: $('j-input'), apply: $('j-apply'),
       now: $('j-now'), next: $('j-next'), dots: $('j-dots'),
       play: $('j-play'), bpm: $('j-bpm'), down: $('j-down'), up: $('j-up'), beats: $('j-beats'), groove: $('j-groove'),
       drums: $('j-drums'), bass: $('j-bass'), comp: $('j-comp'), scales: $('j-scales'), legend: $('j-legend'),
@@ -207,11 +208,14 @@
 
     function render() {
       if (!active) return;
+      // 입력칸에는 현재 진행 (입력 중일 때는 건드리지 않음)
+      if (document.activeElement !== el.input) el.input.value = st.prog.map((c) => build(c.rootPc, c.type).name).join(' ');
       const cur = st.prog[run.current] || st.prog[0];
       const nxt = st.prog[(run.current + 1) % st.prog.length];
       el.prog.innerHTML = st.prog.length
         ? st.prog.map((c, i) => `<div class="g-step${run.on && i === run.current ? ' playing' : ''}"><b>${build(c.rootPc, c.type).name}</b></div>`).join('')
         : '<p class="g-empty">진행 없음 (코드 가이드에서 가져오거나 프리셋 선택)</p>';
+      if (skipped.length) el.prog.innerHTML += `<p class="g-empty">인식 불가, 제외됨: ${skipped.join(', ')}</p>`;
       el.now.textContent = cur ? build(cur.rootPc, cur.type).name : '–';
       el.next.textContent = nxt && st.prog.length > 1 ? build(nxt.rootPc, nxt.type).name : '';
 
@@ -262,10 +266,30 @@
     el.legend.innerHTML = '<span><i class="lg lg-root"></i>현재 코드 근음</span><span><i class="lg lg-tone"></i>현재 코드 구성음</span>' +
       '<span><i class="lg lg-scale"></i>스케일 음</span>';
 
+    // 직접 입력한 코드로 진행 바꾸기 (진행 분석기와 같은 방식으로 읽음)
+    function applyInput() {
+      const { chords, bad } = FretAnalyze.parseText(el.input.value);
+      if (!chords.length) {
+        el.prog.innerHTML = `<p class="g-empty">${bad.length ? `인식 불가: ${bad.join(', ')}` : '코드 입력 필요'}</p>`;
+        return;
+      }
+      st.prog = chords.map((c) => ({ rootPc: c.rootPc, type: c.type }));
+      skipped = bad;
+      const { pc, mode } = FretAnalyze.guessKeys(chords)[0].key;
+      st.key = { pc, mode };
+      st.scale = null;
+      save();
+      el.input.blur();
+      if (run.on) start(); else render();
+    }
+    el.apply.addEventListener('click', applyInput);
+    el.input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); applyInput(); } });
+
     el.import.addEventListener('click', () => {
       const g = settings.guide;
       if (!g?.prog?.length) { el.prog.innerHTML = '<p class="g-empty">코드 가이드에 진행 없음</p>'; return; }
       st.prog = g.prog.map((c) => ({ ...c }));
+      skipped = [];
       st.key = { ...g.key };
       save();
       if (run.on) start(); else render();
@@ -276,6 +300,7 @@
       if (!p) return;
       st.key = { pc: st.key.pc, mode: p.mode || 'major' };
       st.prog = p.steps.map(([iv, type]) => ({ rootPc: (st.key.pc + iv) % 12, type }));
+      skipped = [];
       save();
       if (run.on) start(); else render();
     });
@@ -315,6 +340,7 @@
         st.prog = prog.map((c) => ({ rootPc: c.rootPc, type: c.type }));
         st.key = { pc: key.pc, mode: key.mode };
         st.scale = null;
+        skipped = [];
         save();
       },
     };
