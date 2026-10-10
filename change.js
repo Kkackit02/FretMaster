@@ -2,7 +2,7 @@
 (function (global) {
   'use strict';
 
-  const OPEN_MIDI = { 1: 64, 2: 59, 3: 55, 4: 50, 5: 45, 6: 40 };
+  const OPEN_MIDI = FretInst.open; // 현재 악기의 개방현 (instrument.js)
   const TYPES_WITH_OPEN = ['maj', 'min', 'dom7', 'maj7', 'min7', 'sus2', 'sus4'];
   const C = (rootPc, type) => ({ rootPc, type });
   // 자주 연습하는 짝

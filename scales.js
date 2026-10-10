@@ -2,7 +2,7 @@
 (function (global) {
   'use strict';
 
-  const OPEN_MIDI = { 1: 64, 2: 59, 3: 55, 4: 50, 5: 45, 6: 40 };
+  const OPEN_MIDI = FretInst.open; // 현재 악기의 개방현 (instrument.js)
   const MAJOR_SEMI = [0, 2, 4, 5, 7, 9, 11];
 
   // notes: [근음에서 반음, 글자 간격(도수-1)]
@@ -37,11 +37,13 @@
     const semis = base.notes.map((n) => n[0]);
     const len = semis.length;
     const nps = len === 7 ? 3 : 2;
-    let midi = 40 + (((rootPc + semis[p]) % 12) - 4 + 12) % 12; // 6번 줄 0~11프렛
+    const low = FretInst.lowest;                          // 가장 낮은 줄
+    const lowOpen = OPEN_MIDI[low];
+    let midi = lowOpen + ((((rootPc + semis[p]) % 12) - (lowOpen % 12)) + 12) % 12; // 가장 낮은 줄 0~11프렛
     let idx = p;
     let cells = [];
-    for (let k = 0; k < nps * 6; k++) {
-      const s = 6 - Math.floor(k / nps);
+    for (let k = 0; k < nps * low; k++) {
+      const s = low - Math.floor(k / nps);
       cells.push({ s, f: midi - OPEN_MIDI[s], midi });
       const next = (idx + 1) % len;
       midi += (semis[next] - semis[idx] + 12) % 12;
@@ -52,7 +54,7 @@
       const lo = Math.min(...cells.map((c) => c.f));
       const hi = Math.max(...cells.map((c) => c.f));
       const blue = (rootPc + 6) % 12;
-      for (let s = 6; s >= 1; s--) {
+      for (let s = FretInst.lowest; s >= 1; s--) {
         for (let f = lo; f <= hi; f++) {
           const m = OPEN_MIDI[s] + f;
           if (m % 12 === blue && !cells.some((c) => c.midi === m)) cells.push({ s, f, midi: m });
@@ -113,7 +115,7 @@
     function cells() {
       if (st.pos >= 0) return positionCells(st.root, st.type, st.pos);
       const out = [];
-      for (let s = 6; s >= 1; s--) {
+      for (let s = FretInst.lowest; s >= 1; s--) {
         for (let f = settings.fretMin; f <= settings.fretMax; f++) {
           const midi = OPEN_MIDI[s] + f;
           if (degreeInfo(midi % 12)) out.push({ s, f, midi });
@@ -158,7 +160,7 @@
       run.wrong = new Set();
       run.startedAt = performance.now();
       el.msg.className = 's-msg';
-      el.msg.textContent = mode === 'mic' ? '다음 음을 기타로 치기' : mode === 'click' ? '다음 음을 지판에서 누르기' : '';
+      el.msg.textContent = mode === 'mic' ? `다음 음을 ${FretInst.isBass ? '베이스' : '기타'}로 치기` : mode === 'click' ? '다음 음을 지판에서 누르기' : '';
       render();
       if (mode === 'listen') playNext();
     }

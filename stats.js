@@ -2,7 +2,7 @@
 (function (global) {
   'use strict';
 
-  const OPEN_MIDI = { 1: 64, 2: 59, 3: 55, 4: 50, 5: 45, 6: 40 };
+  const OPEN_MIDI = FretInst.open; // 현재 악기의 개방현 (instrument.js)
   // 약점 정도: 한 가지 색(주황)의 밝기 단계. 연할수록 잘함, 진할수록 자주 틀리거나 느림
   const RAMP = ['#fbe7c6', '#f7cf8f', '#f0a63a', '#d9822a', '#b4601d', '#8a4214'];
   const DARK_TEXT_UNTIL = 2; // 이 단계까지는 글자를 어둡게
@@ -24,8 +24,9 @@
     function cellStat(s, pc) {
       const stats = ctx.getStats();
       const keys = [];
-      if (st.source !== 'board') keys.push(`${s}:${pc}`, `*:${pc}`);
-      if (st.source !== 'note') keys.push(`board:${s}:${pc}`, `board:*:${pc}`);
+      const ip = FretInst.isBass ? `${FretInst.id}:` : '';
+      if (st.source !== 'board') keys.push(`${ip}${s}:${pc}`, `${ip}*:${pc}`);
+      if (st.source !== 'note') keys.push(`${ip}board:${s}:${pc}`, `${ip}board:*:${pc}`);
       const sum = { seen: 0, clean: 0, cleanMs: 0 };
       for (const k of keys) {
         const x = stats[k];
@@ -93,7 +94,7 @@
     function renderHeatmap() {
       const marks = [];
       const max = Math.max(12, settings.fretMax);
-      for (const s of [1, 2, 3, 4, 5, 6]) {
+      for (const s of FretInst.strings) {
         for (let f = 0; f <= max; f++) {
           const midi = OPEN_MIDI[s] + f;
           const pc = midi % 12;
@@ -117,7 +118,7 @@
 
     function renderWeak() {
       const list = [];
-      for (const s of [1, 2, 3, 4, 5, 6]) {
+      for (const s of FretInst.strings) {
         for (let pc = 0; pc < 12; pc++) {
           const x = cellStat(s, pc);
           if (x && x.seen >= 2) list.push({ s, pc, ...x });

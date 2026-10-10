@@ -2,7 +2,7 @@
 (function (global) {
   'use strict';
 
-  const OPEN_MIDI = { 1: 64, 2: 59, 3: 55, 4: 50, 5: 45, 6: 40 };
+  const OPEN_MIDI = FretInst.open; // 현재 악기의 개방현 (instrument.js)
   const QUALITIES = {
     maj: { label: 'M (메이저)', semis: [0, 4, 7] },
     min: { label: 'm (마이너)', semis: [0, 3, 7] },
@@ -12,6 +12,8 @@
   const ROLES = ['R', '3', '5'];
   // 줄 세트: 낮은 줄 → 높은 줄
   const SETS = { 123: [3, 2, 1], 234: [4, 3, 2], 345: [5, 4, 3], 456: [6, 5, 4] };
+  // 현재 악기에 있는 줄 세트 (4현 베이스는 1-2-3, 2-3-4만)
+  const availSets = () => Object.keys(SETS).filter((id) => SETS[id].every((s) => FretInst.open[s]));
   const INVERSIONS = [
     { label: '기본형', order: [0, 1, 2], cls: 'inv0' },  // R 3 5 (베이스가 근음)
     { label: '1전위', order: [1, 2, 0], cls: 'inv1' },   // 3 5 R
@@ -83,7 +85,9 @@
     function next() {
       clearTimeout(timer);
       const quality = st.qQualities[rand(st.qQualities.length)];
-      const set = st.qSets[rand(st.qSets.length)];
+      const sets = st.qSets.filter((id) => availSets().includes(id));
+      const pool = sets.length ? sets : availSets();
+      const set = pool[rand(pool.length)];
       const inv = rand(3);
       const root = rand(12);
       q = { root, quality, set, inv, answers: voicings(root, quality, set, inv), mistakes: 0, done: false, startedAt: performance.now() };
@@ -155,6 +159,9 @@
 
     function render(reveal = false) {
       if (!active) return;
+      if (!availSets().includes(st.set)) st.set = availSets()[0];
+      el.set.innerHTML = availSets().map((id) => `<option value="${id}">${setLabel(id)}</option>`).join('');
+      el.qSets.innerHTML = availSets().map((id) => `<label><input type="checkbox" value="${id}">${setLabel(id)}</label>`).join('');
       el.modes.innerHTML = [['map', '보기'], ['quiz', '퀴즈']].map(([id, label]) =>
         `<button type="button" data-mode="${id}" class="${id === st.mode ? 'on' : ''}">${label}</button>`).join('');
       el.mapCtl.hidden = st.mode !== 'map';

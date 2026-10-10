@@ -2,7 +2,7 @@
 (function (global) {
   'use strict';
 
-  const OPEN_MIDI = { 1: 64, 2: 59, 3: 55, 4: 50, 5: 45, 6: 40 };
+  const OPEN_MIDI = FretInst.open; // 현재 악기의 개방현 (instrument.js)
   const NAMES = ['완전1도', '단2도', '장2도', '단3도', '장3도', '완전4도', '증4도·감5도', '완전5도', '단6도', '장6도', '단7도', '장7도', '옥타브'];
   const SHORT = ['R', '♭2', '2', '♭3', '3', '4', '♭5', '5', '♭6', '6', '♭7', '7', '8'];
   const rand = (n) => Math.floor(Math.random() * n);
@@ -47,7 +47,7 @@
     // 이 높이의 음이 나는 자리들
     function cellsOf(midi) {
       const out = [];
-      for (const s of [1, 2, 3, 4, 5, 6]) {
+      for (const s of FretInst.strings) {
         const f = midi - OPEN_MIDI[s];
         if (f >= 0 && f <= maxFret()) out.push({ s, f, midi });
       }
@@ -134,7 +134,8 @@
         const root = midiAt(st.root.s, st.root.f);
         el.prompt.innerHTML = `근음 <b>${ctx.noteNameWithOctave(root)}</b> (${st.root.s}번 줄 ${st.root.f}프렛) · 지판을 누르면 근음 변경`;
         const marks = [];
-        for (const s of [1, 2, 3, 4, 5, 6]) {
+        if (!OPEN_MIDI[st.root.s]) st.root = { s: FretInst.lowest, f: 3 };
+        for (const s of FretInst.strings) {
           for (let f = Math.max(0, st.root.f - 5); f <= Math.min(maxFret(), st.root.f + 5); f++) {
             const iv = midiAt(s, f) - root;
             if (iv < -12 || iv > 12) continue;

@@ -16,6 +16,7 @@
 <body>
   <header class="top">
     <h1>Fret<span>Master</span></h1>
+    <select id="instrument" class="inst-select" aria-label="악기"></select>
     <button type="button" id="btn-install" class="install" hidden>앱 설치</button>
     <div class="stats">
       <div><b id="st-correct">0</b><small>정답</small></div>
@@ -78,7 +79,7 @@
         <div class="g-row s-actions">
           <button type="button" id="s-listen">▶ 듣기</button>
           <button type="button" id="s-click">지판으로 연습</button>
-          <button type="button" id="s-mic">기타로 연습 (마이크)</button>
+          <button type="button" id="s-mic" data-inst-text>기타로 연습 (마이크)</button>
           <button type="button" id="s-stop" class="ghost" hidden>중지</button>
           <label class="check"><input type="checkbox" id="s-show"> 운지 표시</label>
         </div>
@@ -396,7 +397,7 @@
             <button type="button" id="g-gt">가이드톤 연습</button>
             <select id="g-gt-input" aria-label="입력 방법">
               <option value="click">지판 클릭</option>
-              <option value="mic">기타 (마이크)</option>
+              <option value="mic" data-inst-text>기타 (마이크)</option>
             </select>
             <label class="check"><input type="checkbox" id="g-gt-timed"> 템포에 맞춰 진행</label>
             <span class="g-gt-msg" id="g-gt-msg"></span>
@@ -526,6 +527,7 @@
     </details>
   </main>
 
+  <script src="instrument.js"></script>
   <script src="log.js"></script>
   <script src="pitch.js"></script>
   <script src="chords.js"></script>

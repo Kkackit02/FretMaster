@@ -43,7 +43,7 @@
   ];
 
   const MAX_PROG = 32;
-  const OPEN_MIDI = { 1: 64, 2: 59, 3: 55, 4: 50, 5: 45, 6: 40 };
+  const OPEN_MIDI = FretInst.open; // 현재 악기의 개방현 (instrument.js)
   // 가이드톤: 코드 성격을 정하는 3음과 7음 (sus 코드는 3음 자리의 2·4음)
   const GUIDE_ROLES = new Set(['3', '♭3', '2', '4', '7', '♭7']);
   const isSeventh = (role) => role.includes('7');
@@ -158,6 +158,7 @@
     function select(chord, { sound = true } = {}) {
       st.chord = { rootPc: chord.rootPc, type: chord.type };
       // 고른 운지가 없는 코드면 있는 운지로
+      if (FretInst.isBass && !['all', 'guide'].includes(st.form)) st.form = 'all'; // 베이스는 코드 운지 없음
       if (!['all', 'guide'].includes(st.form) && !FretChords.shapeOf(chord.rootPc, chord.type, st.form)) {
         st.form = ['open', 'a', 'e'].find((f) => FretChords.shapeOf(chord.rootPc, chord.type, f)) || 'all';
       }
@@ -386,7 +387,7 @@
         `<button type="button" data-type="${id}" class="${id === st.chord.type ? 'on' : ''}">${t.label}</button>`).join('');
       const forms = [...Object.entries(FretChords.FORMS).map(([id, f]) => [id, f.label]), ['all', '구성음 전체'], ['guide', '가이드톤 (3·7음)']];
       el.forms.innerHTML = forms.map(([id, label]) => {
-        const ok = id === 'all' || id === 'guide' || FretChords.shapeOf(st.chord.rootPc, st.chord.type, id);
+        const ok = id === 'all' || id === 'guide' || (!FretInst.isBass && FretChords.shapeOf(st.chord.rootPc, st.chord.type, id));
         return `<button type="button" data-form="${id}" class="${id === st.form ? 'on' : ''}"${ok ? '' : ' disabled'}>${label}</button>`;
       }).join('');
 
@@ -402,7 +403,7 @@
         return;
       }
       ctx.showOnPiano(chord);
-      const shape = st.form !== 'all' && FretChords.shapeOf(st.chord.rootPc, st.chord.type, st.form);
+      const shape = !FretInst.isBass && st.form !== 'all' && FretChords.shapeOf(st.chord.rootPc, st.chord.type, st.form);
       ctx.renderBoard(shape ? ctx.shapeMarks(chord, shape, st.form) : ctx.rangeMarks(chord));
     }
 

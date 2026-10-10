@@ -2,7 +2,7 @@
 (function (global) {
   'use strict';
 
-  const OPEN_MIDI = { 1: 64, 2: 59, 3: 55, 4: 50, 5: 45, 6: 40 };
+  const OPEN_MIDI = FretInst.open; // 현재 악기의 개방현 (instrument.js)
   const FIFTHS = [0, 7, 2, 9, 4, 11, 6, 1, 8, 3, 10, 5];
   const COMP = { off: '코드 없음', pad: '패드 (길게)', stab: '스탭 (2·4박)' };
 
@@ -261,7 +261,7 @@
       const tones = scaleTones();
       const chord = cur ? build(cur.rootPc, cur.type) : null;
       const marks = [];
-      for (const s of [1, 2, 3, 4, 5, 6]) {
+      for (const s of FretInst.strings) {
         for (let f = settings.fretMin; f <= settings.fretMax; f++) {
           const midi = OPEN_MIDI[s] + f;
           const pc = midi % 12;

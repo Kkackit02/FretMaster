@@ -706,7 +706,7 @@ body[data-drill="jam"] :is(.prompt, .controls, .tuner, .chroma, .piano) { displa
 .j-scales { display: grid; gap: 6px; justify-items: center; }
 .j-scales .g-pills button { padding: 6px 12px; font-size: 14px; }
 
-.install { margin-right: auto; margin-left: 4px; padding: 6px 12px; font-size: 13px; border-color: var(--accent); color: var(--accent); }
+.install { margin-left: 4px; padding: 6px 12px; font-size: 13px; border-color: var(--accent); color: var(--accent); }
 
 /* ---------- 코드 전환 ---------- */
 body[data-drill="change"] .change,
@@ -911,3 +911,6 @@ body[data-drill="build"] :is(.prompt, .controls, .tuner, .chroma) { display: non
 .b-table td:nth-child(2) { white-space: normal; color: var(--muted); }
 .chg { color: var(--accent); font-weight: 700; }
 .b-detail { font-size: 15px; text-align: center; }
+
+/* ---------- 악기 선택 ---------- */
+.inst-select { margin-right: auto; padding: 5px 8px; font-size: 13px; }

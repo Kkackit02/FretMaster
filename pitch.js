@@ -14,10 +14,10 @@
    * @param {number} threshold  CMNDF 임계값 (작을수록 엄격)
    * @returns {{freq:number, clarity:number} | null}
    */
-  function detect(buf, sampleRate, threshold = 0.15) {
+  function detect(buf, sampleRate, threshold = 0.15, minFreq = MIN_FREQ) {
     const W = buf.length >> 1;
     const minTau = Math.max(2, Math.floor(sampleRate / MAX_FREQ));
-    const maxTau = Math.min(W - 1, Math.ceil(sampleRate / MIN_FREQ));
+    const maxTau = Math.min(W - 1, Math.ceil(sampleRate / minFreq));
     if (!diff || diff.length < maxTau + 2) diff = new Float32Array(maxTau + 2);
 
     // 1) 차분 함수

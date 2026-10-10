@@ -63,10 +63,10 @@
       el.detail.innerHTML = FretChords.explain(st.root, st.type, ctx.accFor(st.root, st.type), settings.naming)
         .map((l) => `<div>${l}</div>`).join('');
       ctx.showOnPiano(chord);
-      const shape = st.form !== 'all' && FretChords.shapeOf(st.root, st.type, st.form);
+      const shape = !FretInst.isBass && st.form !== 'all' && FretChords.shapeOf(st.root, st.type, st.form);
       ctx.renderBoard(shape ? ctx.shapeMarks(chord, shape, st.form) : ctx.rangeMarks(chord));
       el.form.querySelectorAll('option').forEach((o) => {
-        o.disabled = o.value !== 'all' && !FretChords.shapeOf(st.root, st.type, o.value);
+        o.disabled = o.value !== 'all' && (FretInst.isBass || !FretChords.shapeOf(st.root, st.type, o.value));
       });
     }
 
@@ -75,6 +75,7 @@
 
     // 고른 운지가 없는 코드면 있는 운지로
     function fitForm() {
+      if (FretInst.isBass) { st.form = 'all'; return; } // 베이스는 코드 운지 없음
       if (st.form !== 'all' && !FretChords.shapeOf(st.root, st.type, st.form)) {
         st.form = ['open', 'a', 'e'].find((f) => FretChords.shapeOf(st.root, st.type, f)) || 'all';
       }

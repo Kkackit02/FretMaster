@@ -281,7 +281,8 @@
         return name + bass;
       }).join('  ');
 
-      // 카포: 모든 코드가 오픈 코드 모양이 되는 자리
+      // 카포: 모든 코드가 오픈 코드 모양이 되는 자리 (기타 전용)
+      el.capo.closest('.field').hidden = FretInst.isBass;
       const opts = [];
       for (let capo = 0; capo <= 7; capo++) {
         const shapes = items.map((it) => ({ rootPc: (it.c.rootPc - capo + 12) % 12, type: it.c.type }));
@@ -298,6 +299,7 @@
       const it = result.items[st.selected];
       if (!it) { ctx.renderBoard([]); return; }
       const chord = build(it.c);
+      if (FretInst.isBass) { ctx.renderBoard(ctx.rangeMarks(chord)); return; } // 베이스는 구성음 자리만
       const shape = FretChords.shapeOf(it.c.rootPc, it.c.type, 'open')
         || FretChords.shapeOf(it.c.rootPc, it.c.type, 'e') || FretChords.shapeOf(it.c.rootPc, it.c.type, 'a');
       const form = FretChords.shapeOf(it.c.rootPc, it.c.type, 'open') ? 'open' : FretChords.shapeOf(it.c.rootPc, it.c.type, 'e') ? 'e' : 'a';

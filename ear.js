@@ -2,7 +2,7 @@
 (function (global) {
   'use strict';
 
-  const OPEN_MIDI = { 1: 64, 2: 59, 3: 55, 4: 50, 5: 45, 6: 40 };
+  const OPEN_MIDI = FretInst.open; // 현재 악기의 개방현 (instrument.js)
   const INTERVALS = [
     [1, '단2도', 'm2'], [2, '장2도', 'M2'], [3, '단3도', 'm3'], [4, '장3도', 'M3'],
     [5, '완전4도', 'P4'], [6, '증4도·감5도', 'TT'], [7, '완전5도', 'P5'], [8, '단6도', 'm6'],

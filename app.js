@@ -2,8 +2,8 @@
   'use strict';
 
   // ---------- 상수 ----------
-  const OPEN_MIDI = { 1: 64, 2: 59, 3: 55, 4: 50, 5: 45, 6: 40 }; // 표준 튜닝 E A D G B E
-  const STRINGS = [1, 2, 3, 4, 5, 6];
+  const OPEN_MIDI = FretInst.open;   // 현재 악기의 개방현 (instrument.js)
+  const STRINGS = FretInst.strings;  // 악기를 바꾸면 제자리에서 바뀜
   const NAMES = {
     letter: {
       sharp: ['C', 'C♯', 'D', 'D♯', 'E', 'F', 'F♯', 'G', 'G♯', 'A', 'A♯', 'B'],
@@ -25,8 +25,8 @@
   const DRILLS = {
     note:  { label: '단음', help: '화면의 음을 기타로 치면 마이크로 판정. 줄 지정 또는 음이름만 출제' },
     tones: { label: '코드 구성음', help: '코드의 구성음을 기타로 한 음씩 치기. 줄·옥타브 무관' },
-    strum: { label: '코드 스트럼', help: '코드를 잡고 한 번에 스트럼. 마이크로 코드 판정' },
-    change: { label: '코드 전환', help: '두 코드를 번갈아 치며 정해진 시간 동안 전환 횟수 측정' },
+    strum: { guitarOnly: true, label: '코드 스트럼', help: '코드를 잡고 한 번에 스트럼. 마이크로 코드 판정' },
+    change: { guitarOnly: true, label: '코드 전환', help: '두 코드를 번갈아 치며 정해진 시간 동안 전환 횟수 측정' },
     board: { label: '지판 찍기', help: '마이크 없이 지판을 눌러 음 위치나 코드 구성음 찾기' },
     piano: { label: '건반 코드', help: '화면 건반을 눌러 코드 구성음 완성. 마이크 불필요' },
     scale: { label: '스케일', help: '스케일 포지션 보기·듣기. 지판 클릭 또는 기타로 순서대로 연습' },
@@ -49,6 +49,8 @@
     { id: 'drum', label: '드럼', drills: ['drum'] },
     { id: 'stats', label: '기록', drills: ['stats'] },
   ];
+  const available = (id) => !(FretInst.isBass && DRILLS[id].guitarOnly); // 베이스에서는 코드 스트럼 탭 숨김
+  const forInst = (text) => (FretInst.isBass ? text.replace(/기타/g, '베이스') : text); // 문구의 악기 이름
   const groupOf = (drill) => GROUPS.find((g) => g.drills.includes(drill)) || GROUPS[0];
   // 학습 모드(힌트 항상 표시)를 쓸 수 있는 탭
   const LEARN_DRILLS = new Set(['note', 'tones', 'strum', 'board', 'piano', 'triad', 'interval', 'staff']);
@@ -86,6 +88,7 @@
     pianoLabels: true,
     learn: false,
     boardTask: 'note',
+    instrument: 'guitar',
   };
 
   // ---------- 저장소 ----------
@@ -98,6 +101,8 @@
 
   const saved = load();
   const settings = { ...DEFAULTS, ...(saved.settings || {}) };
+  FretInst.set(settings.instrument);
+  fitStrings();
   // 관용 표기(auto)가 생기기 전 저장된 설정이면 기본값으로 옮김
   if (saved.settings && !saved.settings.forms) settings.accidental = 'auto';
   // 잠깐 있었던 '건반 · 지판' 통합 탭
@@ -123,7 +128,7 @@
   // ---------- DOM ----------
   const $ = (id) => document.getElementById(id);
   const el = {
-    tabs: $('drill-tabs'),
+    tabs: $('drill-tabs'), instrument: $('instrument'),
     prompt: $('prompt'), promptString: $('prompt-string'), promptNote: $('prompt-note'), promptTones: $('prompt-tones'), explain: $('prompt-explain'), status: $('status'),
     start: $('btn-start'), hint: $('btn-hint'), skip: $('btn-skip'), reset: $('btn-reset'),
     detNote: $('det-note'), needle: $('det-needle'), level: $('level-bar'), gate: $('level-gate'), chroma: $('chroma'),
@@ -174,7 +179,7 @@
         const midi = OPEN_MIDI[s] + f;
         const pc = midi % 12;
         if (settings.naturalOnly && !NATURAL.has(pc)) continue;
-        const prefix = isBoard() ? 'board:' : '';
+        const prefix = (FretInst.isBass ? `${FretInst.id}:` : '') + (isBoard() ? 'board:' : ''); // 악기별 기록
         const key = prefix + (settings.mode === 'string' ? `${s}:${pc}` : `*:${pc}`);
         if (!pool.has(key)) {
           pool.set(key, { key, pc, string: settings.mode === 'string' ? s : null, targets: [] });
@@ -254,7 +259,7 @@
     strum.armed = false; // 이전 문제의 소리가 울리는 중일 수 있으니 새로 칠 때까지 대기
 
     if (!isChordDrill()) {
-      const how = !isBoard() ? '기타로 치기' : '지판에서 누르기';
+      const how = !isBoard() ? forInst('기타로 치기') : '지판에서 누르기';
       showPrompt(item.string ? `${item.string}번 줄` : '아무 줄에서나', noteName(item.pc, acc), how);
     } else {
       question.chord = FretChords.build(item.rootPc, item.type, acc, settings.naming);
@@ -697,7 +702,7 @@
     let midi = null;
     let cents = 0;
     if (loud) {
-      const r = FretPitch.detect(buf, ctx.sampleRate);
+      const r = FretPitch.detect(buf, ctx.sampleRate, 0.15, FretInst.minFreq);
       if (r) {
         const m = FretPitch.freqToMidi(r.freq);
         midi = Math.round(m);
@@ -978,21 +983,23 @@
     let width, height;
     // 줄 s, 프렛 f의 좌표
     const pos = vertical
-      ? (st, f) => ({ x: FV.left + (6 - st) * FV.gap, y: f === 0 ? FV.top - 24 : FV.top + (f - 0.5) * FV.fretH })
+      ? (st, f) => ({ x: FV.left + (N - st) * FV.gap, y: f === 0 ? FV.top - 24 : FV.top + (f - 0.5) * FV.fretH })
       : (st, f) => ({ x: fx(f), y: sy(st) });
     const activeString = phase !== 'idle' && question?.string;
+    const N = STRINGS.length;
+    const thick = (st) => (FretInst.isBass ? 1.8 + (st - 1) * 0.6 : 1 + (st - 1) * 0.45); // 줄 굵기
 
     if (vertical) {
-      const x0 = FV.left - 16, x1 = FV.left + 5 * FV.gap + 16;
+      const x0 = FV.left - 16, x1 = FV.left + (N - 1) * FV.gap + 16;
       width = x1 + 14;
       height = FV.top + n * FV.fretH + 14;
       parts.push(`<rect class="fb-board" x="${x0}" y="${FV.top}" width="${x1 - x0}" height="${n * FV.fretH}" rx="3"/>`);
       for (let f = 1; f <= n; f++) {
         const y = FV.top + (f - 0.5) * FV.fretH;
         if (f % 12 === 0) {
-          parts.push(`<circle class="fb-inlay" cx="${FV.left + 1.5 * FV.gap}" cy="${y}" r="6"/><circle class="fb-inlay" cx="${FV.left + 3.5 * FV.gap}" cy="${y}" r="6"/>`);
+          parts.push(`<circle class="fb-inlay" cx="${FV.left + (N - 1) * 0.25 * FV.gap}" cy="${y}" r="6"/><circle class="fb-inlay" cx="${FV.left + (N - 1) * 0.75 * FV.gap}" cy="${y}" r="6"/>`);
         } else if ([3, 5, 7, 9].includes(f % 12)) {
-          parts.push(`<circle class="fb-inlay" cx="${FV.left + 2.5 * FV.gap}" cy="${y}" r="6"/>`);
+          parts.push(`<circle class="fb-inlay" cx="${FV.left + (N - 1) * 0.5 * FV.gap}" cy="${y}" r="6"/>`);
         }
         if (f < settings.fretMin || f > settings.fretMax) {
           parts.push(`<rect class="fb-out" x="${x0}" y="${FV.top + (f - 1) * FV.fretH}" width="${x1 - x0}" height="${FV.fretH}"/>`);
@@ -1004,21 +1011,21 @@
         const x = pos(st, 0).x;
         const active = st === activeString ? ' active' : '';
         const dim = settings.strings.includes(st) ? '' : ' style="opacity:.3"';
-        parts.push(`<line class="fb-string${active}" x1="${x}" y1="${FV.top - 40}" x2="${x}" y2="${height - 10}" stroke-width="${1 + (st - 1) * 0.45}"${dim}/>`);
+        parts.push(`<line class="fb-string${active}" x1="${x}" y1="${FV.top - 40}" x2="${x}" y2="${height - 10}" stroke-width="${thick(st)}"${dim}/>`);
         parts.push(`<text class="fb-label${active}" x="${x}" y="10">${st}</text>`);
       }
       for (let f = 0; f <= n; f++) parts.push(`<text class="fb-num" x="16" y="${pos(1, f).y + 4}">${f}</text>`);
     } else {
       width = FB.left + n * FB.fretW + 12;
-      const bottom = sy(6);
+      const bottom = sy(N);
       height = bottom + 40;
       const midY = (sy(1) + bottom) / 2;
       parts.push(`<rect class="fb-board" x="${FB.left}" y="${FB.top - 12}" width="${n * FB.fretW}" height="${bottom - FB.top + 24}" rx="3"/>`);
       for (let f = 1; f <= n; f++) {
         const x = fx(f);
         if (f % 12 === 0) {
-          parts.push(`<circle class="fb-inlay" cx="${x}" cy="${sy(2) + FB.gap / 2}" r="6"/>`);
-          parts.push(`<circle class="fb-inlay" cx="${x}" cy="${sy(4) + FB.gap / 2}" r="6"/>`);
+          parts.push(`<circle class="fb-inlay" cx="${x}" cy="${sy(1) + (bottom - sy(1)) * 0.25}" r="6"/>`);
+          parts.push(`<circle class="fb-inlay" cx="${x}" cy="${sy(1) + (bottom - sy(1)) * 0.75}" r="6"/>`);
         } else if ([3, 5, 7, 9].includes(f % 12)) {
           parts.push(`<circle class="fb-inlay" cx="${x}" cy="${midY}" r="6"/>`);
         }
@@ -1038,7 +1045,7 @@
         const y = sy(st);
         const active = st === activeString ? ' active' : '';
         const dim = settings.strings.includes(st) ? '' : ' style="opacity:.3"';
-        parts.push(`<line class="fb-string${active}" x1="${FB.left - 36}" y1="${y}" x2="${width - 12}" y2="${y}" stroke-width="${1 + (st - 1) * 0.45}"${dim}/>`);
+        parts.push(`<line class="fb-string${active}" x1="${FB.left - 36}" y1="${y}" x2="${width - 12}" y2="${y}" stroke-width="${thick(st)}"${dim}/>`);
         parts.push(`<text class="fb-label${active}" x="10" y="${y}">${st}</text>`);
       }
       for (let f = 0; f <= n; f++) parts.push(`<text class="fb-num" x="${fx(f)}" y="${bottom + 30}">${f}</text>`);
@@ -1080,7 +1087,7 @@
       }
     }
 
-    el.board.innerHTML = `<svg class="${vertical ? 'vertical' : 'horizontal'}" viewBox="0 0 ${width} ${height}" role="img" aria-label="기타 지판">${parts.join('')}</svg>`;
+    el.board.innerHTML = `<svg class="${vertical ? 'vertical' : 'horizontal'}" viewBox="0 0 ${width} ${height}" role="img" aria-label="${FretInst.label} 지판">${parts.join('')}</svg>`;
   }
 
   // ---------- 모드 탭 ----------
@@ -1088,12 +1095,12 @@
     const group = groupOf(settings.drill);
     el.tabs.innerHTML =
       `<div class="tab-groups">${GROUPS.map((g) =>
-        `<button type="button" data-group="${g.id}" class="${g === group ? 'on' : ''}">${g.label}</button>`).join('')}</div>` +
-      (group.drills.length > 1
-        ? `<div class="tab-drills" role="tablist">${group.drills.map((id) =>
+        `<button type="button" data-group="${g.id}" class="${g === group ? 'on' : ''}">${forInst(g.label)}</button>`).join('')}</div>` +
+      (group.drills.filter(available).length > 1
+        ? `<div class="tab-drills" role="tablist">${group.drills.filter(available).map((id) =>
           `<button type="button" data-drill="${id}" role="tab" class="${id === settings.drill ? 'on' : ''}" aria-selected="${id === settings.drill}">${DRILLS[id].label}</button>`).join('')}</div>`
         : '') +
-      `<div class="tab-help-row">${DRILLS[settings.drill].help ? `<p class="tab-help">${DRILLS[settings.drill].help}</p>` : ''}` +
+      `<div class="tab-help-row">${DRILLS[settings.drill].help ? `<p class="tab-help">${forInst(DRILLS[settings.drill].help)}</p>` : ''}` +
       (LEARN_DRILLS.has(settings.drill)
         ? `<label class="check learn-toggle"><input type="checkbox" id="learn-toggle"${settings.learn ? ' checked' : ''}> 학습 모드 (힌트 항상 표시)</label>`
         : '') + '</div>';
@@ -1115,7 +1122,7 @@
         // 분류를 바꾸면 그 분류에서 마지막으로 쓴 탭으로
         const g = GROUPS.find((x) => x.id === groupBtn.dataset.group);
         const last = settings.lastDrill?.[g.id];
-        switchDrill(g.drills.includes(last) ? last : g.drills[0]);
+        switchDrill(g.drills.includes(last) && available(last) ? last : g.drills.find(available));
         return;
       }
       const btn = e.target.closest('button[data-drill]');
@@ -1230,9 +1237,7 @@
 
   // ---------- 설정 UI ----------
   function initSettings() {
-    el.strings.innerHTML = STRINGS.map((s) =>
-      `<label><input type="checkbox" value="${s}">${s}번 (${NAMES.letter.sharp[OPEN_MIDI[s] % 12]})</label>`,
-    ).join('');
+    renderStringChips();
     el.forms.innerHTML = Object.entries(FretChords.FORMS).map(([id, f]) =>
       `<label><input type="checkbox" value="${id}">${f.label}</label>`,
     ).join('');
@@ -1310,6 +1315,61 @@
       stats = {};
       persist();
     });
+  }
+
+  function renderStringChips() {
+    el.strings.innerHTML = STRINGS.map((s) =>
+      `<label><input type="checkbox" value="${s}"${settings.strings.includes(s) ? ' checked' : ''}>${s}번 (${NAMES.letter.sharp[OPEN_MIDI[s] % 12]})</label>`,
+    ).join('');
+  }
+
+  // 고른 줄 중 이 악기에 없는 줄은 빼고, 남는 게 없으면 전부
+  function fitStrings() {
+    const ok = (settings.strings || []).filter((s) => STRINGS.includes(s));
+    settings.strings = ok.length ? ok : [...STRINGS];
+  }
+
+  // ---------- 악기 ----------
+  function initInstrument() {
+    el.instrument.innerHTML = Object.entries(FretInst.INSTRUMENTS)
+      .map(([id, d]) => `<option value="${id}">${d.label}</option>`).join('');
+    el.instrument.value = FretInst.id;
+    document.body.dataset.inst = FretInst.id;
+    renderInstText();
+    el.instrument.addEventListener('change', () => setInstrument(el.instrument.value));
+  }
+
+  // 화면 고정 문구 중 악기 이름이 들어간 것 (data-inst-text)
+  function renderInstText() {
+    document.querySelectorAll('[data-inst-text]').forEach((n) => {
+      n.dataset.instText ||= n.textContent;
+      n.textContent = forInst(n.dataset.instText);
+    });
+  }
+
+  function setInstrument(id) {
+    if (id === FretInst.id) return;
+    if (PAGES.has(settings.drill)) pages[settings.drill].deactivate();
+    FretInst.set(id);
+    settings.instrument = FretInst.id;
+    settings.strings = [...STRINGS];
+    document.body.dataset.inst = FretInst.id;
+    renderInstText();
+    if (!available(settings.drill)) settings.drill = 'note';
+    persist();
+    renderStringChips();
+    applyDrill();
+    if (PAGES.has(settings.drill)) {
+      stopSession('');
+      pages[settings.drill].activate();
+    } else if (MIC_FREE.has(settings.drill)) {
+      if (audio.ctx) stopSession('');
+      startClickDrill();
+    } else {
+      stopSession('시작을 누른 뒤 마이크 허용');
+      renderTones();
+      renderBoard();
+    }
   }
 
   function clampFret(v) {
@@ -1411,7 +1471,9 @@
 
   initChroma();
   initPiano();
+  initInstrument();
   initSettings();
+  if (!available(settings.drill)) settings.drill = 'note';
   initTabs();
   updateStats();
   renderBoard();

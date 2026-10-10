@@ -2,7 +2,7 @@
 (function (global) {
   'use strict';
 
-  const OPEN_MIDI = { 1: 64, 2: 59, 3: 55, 4: 50, 5: 45, 6: 40 };
+  const OPEN_MIDI = FretInst.open; // 현재 악기의 개방현 (instrument.js)
   const LETTERS = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
   const LETTER_PC = [0, 2, 4, 5, 7, 9, 11];
   // 자리표별 오선 맨 아래 줄의 음 (도수 번호 = 글자 + 7×옥타브)
@@ -110,7 +110,7 @@
         }
         const sound = cells[rand(cells.length)] ?? 52;
         const { dn, acc } = midiToDn(sound + 12, Math.random() < 0.5);
-        q = { dn, acc, midi: sound, clef: 'treble' };
+        q = { dn, acc, midi: sound, clef: FretInst.isBass ? 'bass' : 'treble' };
       }
       Object.assign(q, { tried: new Set(), mistakes: 0, done: false, ghost: null, startedAt: performance.now() });
       el.msg.className = 'e-msg';
@@ -157,7 +157,7 @@
       // 내가 누른 음을 오선보에 겹쳐 그려 비교
       q.ghost = { ...midiToDn(midi + 12, q.acc === -1), s, f };
       const d = midi - q.midi;
-      const hint = Math.abs(d) % 12 === 0 ? `옥타브 오류: 정답은 한 옥타브 ${d > 0 ? '아래' : '위'} (기타 악보는 실음보다 한 옥타브 높게 표기)`
+      const hint = Math.abs(d) % 12 === 0 ? `옥타브 오류: 정답은 한 옥타브 ${d > 0 ? '아래' : '위'} (${FretInst.isBass ? '베이스' : '기타'} 악보는 실음보다 한 옥타브 높게 표기)`
         : `정답은 ${Math.abs(d)}반음 ${d > 0 ? '아래' : '위'}`;
       wrong(`${s}:${f}`, `오답: ${s}번 줄 ${f}프렛 = ${withOct(q.ghost.dn, q.ghost.acc)} · ${hint}`);
     }
@@ -184,6 +184,9 @@
       el.clefField.hidden = st.mode !== 'name';
       el.rangeField.hidden = st.mode !== 'name';
       el.note.hidden = st.mode !== 'fret';
+      el.note.innerHTML = FretInst.isBass
+        ? '<span>베이스 악보는 실음보다 한 옥타브 높게 표기 (낮은음자리표 아래 8). 예: 첫째 줄 G2 = 4번 줄 3프렛</span>'
+        : '<span>기타 악보는 실음보다 한 옥타브 높게 표기 (높은음자리표 아래 8). 예: 첫째 줄 E4 = 4번 줄 2프렛</span>';
       if (!q) return;
 
       const notes = [{ dn: q.dn, acc: q.acc, x: 150, cls: q.done ? 'right' : '' }];
