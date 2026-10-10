@@ -914,3 +914,7 @@ body[data-drill="build"] :is(.prompt, .controls, .tuner, .chroma) { display: non
 
 /* ---------- 악기 선택 ---------- */
 .inst-select { margin-right: auto; padding: 5px 8px; font-size: 13px; }
+
+/* ---------- 드럼: 그루브 기호 ---------- */
+.d-paren { font: 400 15px Georgia, serif; fill: #1c1813; text-anchor: middle; }
+.d-note.now .d-paren { fill: #e2483a; }

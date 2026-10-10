@@ -162,6 +162,7 @@
             else if (h === 'K') S().kick(time, 0.8);
             else if (h === 'H') S().hat(time, false, e.t % 24 === 0 ? 0.3 : 0.2);
             else if (h === 'O') S().hat(time, true, 0.28);
+            else S().playHead(h, time, { t: e.t, scale: 0.7 }); // 라이드·탐·고스트 노트 등
           }
         } else if (e.kind === 'bass') bassNote(time, e.pc, e.dur * beatSec);
         else if (e.kind === 'pad') chordSound(time, e.c, e.dur * beatSec, 0.05);

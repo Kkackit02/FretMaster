@@ -124,29 +124,55 @@
   }
 
   // ---------- 그루브 ----------
-  // 16칸 = 16분음표 한 마디. x = 침, o = 오픈 하이햇, - = 쉼
+  // 한 줄 = 한 마디. 16칸이면 16분음표, 12칸이면 셋잇단 8분음표 한 칸
+  // H: x 하이햇 o 오픈   C: 라이드   X: 크래시   P: 하이햇 페달
+  // S: x 스네어 g 고스트 노트 r 크로스 스틱   T: 1 하이 탐 2 미드 탐 3 플로어 탐   K: 킥
   const GROOVES = [
-    { id: 'rock8', name: '기본 8비트', desc: '하이햇 8분, 스네어 2·4박, 킥 1·3박.',
+    { id: 'rock8', cat: '록·팝', name: '기본 8비트', desc: '하이햇 8분, 스네어 2·4박, 킥 1·3박.',
       H: 'x-x-x-x-x-x-x-x-', S: '----x-------x---', K: 'x-------x-------' },
-    { id: 'rock8b', name: '8비트 (킥 3&)', desc: '기본 8비트 + 3박 뒷박 킥.',
+    { id: 'rock8b', cat: '록·팝', name: '8비트 (킥 3&)', desc: '기본 8비트 + 3박 뒷박 킥.',
       H: 'x-x-x-x-x-x-x-x-', S: '----x-------x---', K: 'x-------x-x-----' },
-    { id: 'rock8c', name: '8비트 (킥 2&)', desc: '기본 8비트 + 2박 뒷박 킥.',
+    { id: 'rock8c', cat: '록·팝', name: '8비트 (킥 2&)', desc: '기본 8비트 + 2박 뒷박 킥.',
       H: 'x-x-x-x-x-x-x-x-', S: '----x-------x---', K: 'x-----x-x-------' },
-    { id: 'quarter', name: '4비트 록', desc: '하이햇 4분, 스네어 2·4박, 킥 1·3박.',
+    { id: 'quarter', cat: '록·팝', name: '4비트 록', desc: '하이햇 4분, 스네어 2·4박, 킥 1·3박.',
       H: 'x---x---x---x---', S: '----x-------x---', K: 'x-------x-------' },
-    { id: 'sixteen', name: '16비트', desc: '하이햇 16분 (양손 교대). 2·4박 스네어는 오른손.',
+    { id: 'sixteen', cat: '록·팝', name: '16비트', desc: '하이햇 16분 (양손 교대). 2·4박 스네어는 오른손.',
       H: 'xxxxxxxxxxxxxxxx', S: '----x-------x---', K: 'x-------x-x-----' },
-    { id: 'half', name: '하프타임', desc: '스네어 3박만.',
+    { id: 'half', cat: '록·팝', name: '하프타임', desc: '스네어 3박만.',
       H: 'x-x-x-x-x-x-x-x-', S: '--------x-------', K: 'x-----x---------' },
-    { id: 'disco', name: '디스코', desc: '킥 매 박 (포 온 더 플로어) + 뒷박 오픈 하이햇.',
-      H: 'x-o-x-o-x-o-x-o-', S: '----x-------x---', K: 'x---x---x---x---' },
-    { id: 'shuffle', name: '셔플', desc: '8분음표를 셋잇단 비율(2:1)로 스윙. 표기는 8분.', swing: true,
-      H: 'x-x-x-x-x-x-x-x-', S: '----x-------x---', K: 'x-------x-------' },
-    { id: 'onedrop', name: '원 드롭 (레게)', desc: '1박 비움. 3박에 킥과 스네어.',
-      H: 'x-x-x-x-x-x-x-x-', S: '--------x-------', K: '--------x-------' },
-    { id: 'synco', name: '싱코페이션 킥', desc: '킥이 e·a 자리에도 들어가는 패턴.',
+    { id: 'synco', cat: '록·팝', name: '싱코페이션 킥', desc: '킥이 e·a 자리에도 들어가는 패턴.',
       H: 'x-x-x-x-x-x-x-x-', S: '----x-------x---', K: 'x--x--x---x-----' },
+    { id: 'ride', cat: '록·팝', name: '라이드 8비트', desc: '기본 8비트를 라이드로. 하이햇은 발로 2·4박.',
+      C: 'x-x-x-x-x-x-x-x-', P: '----x-------x---', S: '----x-------x---', K: 'x-------x-x-----' },
+    { id: 'skank', cat: '록·팝', name: '스캥크 (펑크 록)', desc: '빠른 투비트. 킥은 매 박, 스네어는 매 박 뒷박.',
+      H: 'x-x-x-x-x-x-x-x-', S: '--x---x---x---x-', K: 'x---x---x---x---' },
+    { id: 'tom', cat: '록·팝', name: '플로어 탐 그루브', desc: '하이햇 대신 플로어 탐 8분.',
+      T: '3-3-3-3-3-3-3-3-', S: '----x-------x---', K: 'x--x----x-x-----' },
+    { id: 'disco', cat: '펑크·소울', name: '디스코', desc: '킥 매 박 (포 온 더 플로어) + 뒷박 오픈 하이햇.',
+      H: 'x-o-x-o-x-o-x-o-', S: '----x-------x---', K: 'x---x---x---x---' },
+    { id: 'motown', cat: '펑크·소울', name: '모타운', desc: '스네어 매 박. 2·4박을 더 세게 들리게.',
+      H: 'x-x-x-x-x-x-x-x-', S: 'x---x---x---x---', K: 'x-----x-x-------' },
+    { id: 'funk', cat: '펑크·소울', name: '펑크 (고스트 노트)', desc: '괄호 음표 = 고스트 노트. 아주 작게 쳐서 그루브만 채움.',
+      H: 'x-x-x-x-x-x-x-x-', S: '----x--g-g--x--g', K: 'x-x-------x-----' },
+    { id: 'hiphop', cat: '펑크·소울', name: '힙합 (붐뱁)', desc: '느린 템포에서 킥을 뒤로 끌지 않게.',
+      H: 'x-x-x-x-x-x-x-x-', S: '----x-------x---', K: 'x------x--x-----' },
+    { id: 'shuffle', cat: '셔플·스윙', name: '셔플', desc: '8분음표를 셋잇단 비율(2:1)로 스윙. 표기는 8분.', swing: true,
+      H: 'x-x-x-x-x-x-x-x-', S: '----x-------x---', K: 'x-------x-------' },
+    { id: 'blues128', cat: '셔플·스윙', name: '12/8 슬로우 블루스', desc: '한 박을 셋잇단 셋으로. 하이햇 셋잇단 계속.',
+      H: 'xxxxxxxxxxxx', S: '---x-----x--', K: 'x-----x-x---' },
+    { id: 'purdie', cat: '셔플·스윙', name: '하프타임 셔플', desc: '셋잇단 가운데 음은 고스트 노트, 백비트는 3박.',
+      H: 'x-xx-xx-xx-x', S: '-g--g-xg--g-', K: 'x-------x---' },
+    { id: 'jazz', cat: '셔플·스윙', name: '재즈 스윙', desc: '라이드 "칭 칭-가 칭", 하이햇 페달 2·4박. 스윙.', swing: true,
+      C: 'x---x-x-x---x-x-', P: '----x-------x---', S: '----------g-----', K: '----------------' },
+    { id: 'onedrop', cat: '라틴·기타', name: '원 드롭 (레게)', desc: '1박 비움. 3박에 킥과 스네어.',
+      H: 'x-x-x-x-x-x-x-x-', S: '--------x-------', K: '--------x-------' },
+    { id: 'bossa', cat: '라틴·기타', name: '보사노바', desc: '크로스 스틱으로 클라베 리듬, 킥은 "쿵 따쿵" 반복.',
+      H: 'x-x-x-x-x-x-x-x-', S: 'r--r--r---r--r--', K: 'x--xx--xx--xx--x' },
   ];
+  const GROOVE_ROWS = {
+    H: { x: 'H', o: 'O' }, C: { x: 'C' }, X: { x: 'X' }, T: { 1: '1', 2: '2', 3: '3' },
+    S: { x: 'S', g: 'G', r: 'M' }, K: { x: 'K' }, P: { x: 'P' },
+  };
   const COUNT16 = ['', 'e', '&', 'a'];
 
   function countLabel(t) {
@@ -160,23 +186,89 @@
   }
 
   function grooveNotes(g) {
+    const len = g.K.length;
+    const unit = BAR / len; // 16칸 = 6틱, 12칸 = 8틱
     const steps = [];
-    for (let i = 0; i < 16; i++) {
+    for (let i = 0; i < len; i++) {
       const heads = [];
-      if (g.H[i] === 'x') heads.push('H');
-      if (g.H[i] === 'o') heads.push('O');
-      if (g.S[i] === 'x') heads.push('S');
-      if (g.K[i] === 'x') heads.push('K');
+      for (const [row, map] of Object.entries(GROOVE_ROWS)) {
+        const h = g[row] && map[g[row][i]];
+        if (h) heads.push(h);
+      }
       steps.push(heads);
     }
     const notes = [];
     steps.forEach((heads, i) => {
       if (!heads.length) return;
       let j = i + 1;
-      while (j < 16 && !steps[j].length) j++;
-      const t = i * 6;
-      notes.push({ t, ticks: (j - i) * 6, heads, accent: false, graces: '', labels: [{ text: countLabel(t), cls: 'c' }] });
+      while (j < len && !steps[j].length) j++;
+      const t = i * unit;
+      notes.push({ t, ticks: (j - i) * unit, heads, accent: false, graces: '', labels: [{ text: countLabel(t), cls: 'c' }] });
     });
+    return notes;
+  }
+
+  // ---------- 필인 ----------
+  // start: 필인이 시작하는 틱 (그 앞은 그루브 그대로), unit: 한 칸 길이, steps: 칸마다 악기(+로 동시), stick: 칸마다 손
+  const FILLS = [
+    { id: 'eighth', name: '8분 탐 다운 (쉬움)', unit: 12, steps: 'S S 1 1 2 2 3 3', stick: 'R L R L R L R L',
+      desc: '스네어 → 하이 탐 → 미드 탐 → 플로어 탐, 8분음표로 두 번씩.' },
+    { id: 'snare16', name: '스네어 16분', unit: 6, steps: 'S S S S S S S S S S S S S S S S', stick: 'R L R L R L R L R L R L R L R L',
+      desc: '한 마디 내내 스네어 16분. 마디 끝까지 템포 유지.' },
+    { id: 'tom16', name: '16분 탐 다운', unit: 6, steps: 'S S S S 1 1 1 1 2 2 2 2 3 3 3 3', stick: 'R L R L R L R L R L R L R L R L',
+      desc: '한 박마다 스네어 → 하이 → 미드 → 플로어.' },
+    { id: 'beat4', name: '4박 필 (한 박)', start: 72, unit: 6, steps: 'S S 2 3', stick: 'R L R L',
+      desc: '3박까지 그루브, 마지막 한 박만 필인. 그루브로 돌아오는 연습에 좋음.' },
+    { id: 'half', name: '3·4박 필 (두 박)', start: 48, unit: 6, steps: 'S S S S 1 1 3 3', stick: 'R L R L R L R L',
+      desc: '두 박은 그루브, 뒤 두 박은 필인.' },
+    { id: 'trip', name: '셋잇단 탐 다운', unit: 8, steps: 'S S S 1 1 1 2 2 2 3 3 3', stick: 'R L R L R L R L R L R L',
+      desc: '셋잇단으로 한 박씩 내려감. 박마다 시작 손이 바뀜.' },
+    { id: 'linear', name: '리니어 (손손발)', unit: 6, steps: 'S S K 1 1 K 2 2 K 3 3 K S S 3 3', stick: 'R L K R L K R L K R L K R L R L',
+      desc: '손손발 셋 묶음이 박과 어긋나게 돌다가 마지막 박에서 맞춰짐.' },
+  ];
+  const FILL_BARS = { 0: '필인 없음', 1: '1마디 + 필인', 3: '3마디 + 필인', 7: '7마디 + 필인' };
+
+  /** 그루브 한 마디 중 start 이후를 필인으로 바꾼 마디 (t는 0부터) */
+  function fillBar(g, f) {
+    const start = f.start || 0;
+    const notes = grooveNotes(g).filter((n) => n.t < start).map((n) => ({ ...n, ticks: Math.min(n.ticks, start - n.t) }));
+    const steps = f.steps.split(' ');
+    const stick = f.stick.split(' ');
+    steps.forEach((tok, k) => {
+      const t = start + k * f.unit;
+      const hand = stick[k];
+      notes.push({
+        t, ticks: f.unit, heads: tok.split('+'), hand, accent: false, graces: '',
+        labels: [{ text: countLabel(t), cls: 'c' }, { text: hand, cls: HAND_CLS[hand] }],
+      });
+    });
+    return notes;
+  }
+
+  // ---------- 서브디비전 ----------
+  const SUBS = { 1: ['4분', 24], 2: ['8분', 12], 3: ['셋잇단', 8], 4: ['16분', 6], 6: ['6잇단', 4], 8: ['32분', 3] };
+  const LADDERS = {
+    up: { label: '4분 → 8분 → 셋잇단 → 16분', seq: [1, 2, 3, 4] },
+    updown: { label: '올라갔다 내려오기 (6잇단까지)', seq: [1, 2, 3, 4, 6, 4, 3, 2] },
+    swap: { label: '8분 ↔ 셋잇단 ↔ 16분', seq: [2, 3, 4, 3] },
+    full: { label: '4분 → 32분 전부', seq: [1, 2, 3, 4, 6, 8] },
+  };
+
+  function subNotes(ladder, barsEach) {
+    const notes = [];
+    let t = 0;
+    let k = 0;
+    for (const d of LADDERS[ladder].seq) {
+      const ticks = SUBS[d][1];
+      for (let i = 0; i < barsEach * 4 * d; i++) {
+        const hand = k++ % 2 ? 'L' : 'R';
+        notes.push({
+          t, ticks, hand, accent: t % 24 === 0, graces: '', heads: ['S'],
+          labels: [{ text: hand, cls: HAND_CLS[hand] }, i === 0 ? { text: SUBS[d][0], cls: 'c' } : null],
+        });
+        t += ticks;
+      }
+    }
     return notes;
   }
 
@@ -213,17 +305,26 @@
   // ---------- 악보 그리기 ----------
   const STAFFS = {
     one: { lines: [60], pos: { S: 60, K: 73 }, top: 44, bottom: 76, dots: [53, 67] },
-    five: { lines: [40, 50, 60, 70, 80], pos: { H: 35, O: 35, S: 55, K: 75 }, top: 40, bottom: 80, dots: [55, 65] },
+    five: {
+      lines: [40, 50, 60, 70, 80], top: 40, bottom: 80, dots: [55, 65],
+      pos: { X: 30, H: 35, O: 35, C: 40, 1: 45, 2: 50, S: 55, G: 55, M: 55, 3: 65, K: 75, P: 85 },
+    },
   };
 
+  const X_HEADS = new Set(['H', 'O', 'C', 'X', 'P', 'M']);
+
   function drawHead(inst, x, y, ticks, cls) {
-    if (inst === 'H' || inst === 'O') {
+    if (X_HEADS.has(inst)) {
       let out = `<path class="d-xhead ${cls}" d="M${x - 5} ${y - 5}L${x + 5} ${y + 5}M${x - 5} ${y + 5}L${x + 5} ${y - 5}"/>`;
       if (inst === 'O') out += `<circle class="d-open" cx="${x}" cy="${y - 13}" r="3.5"/>`;
+      if (inst === 'X') out += `<line class="d-staff" x1="${x - 9}" y1="${y}" x2="${x + 9}" y2="${y}"/>`; // 덧줄
+      if (inst === 'M') out += `<circle class="d-open" cx="${x}" cy="${y}" r="7"/>`;                     // 크로스 스틱
       return out;
     }
     const hollow = ticks >= 48;
-    return `<ellipse class="${hollow ? 'hollow ' : ''}${cls}" cx="${x}" cy="${y}" rx="6.2" ry="4.4" transform="rotate(-20 ${x} ${y})"/>`;
+    const head = `<ellipse class="${hollow ? 'hollow ' : ''}${cls}" cx="${x}" cy="${y}" rx="6.2" ry="4.4" transform="rotate(-20 ${x} ${y})"/>`;
+    if (inst === 'G') return head + `<text class="d-paren" x="${x - 11}" y="${y + 5}">(</text><text class="d-paren" x="${x + 11}" y="${y + 5}">)</text>`;
+    return head;
   }
 
   function measureLine(staff, x) {
@@ -350,8 +451,10 @@
       }
     }
 
-    const height = rowY(Math.max(rows, 1) - 1) + 8;
-    return `<svg viewBox="0 0 ${width} ${height}" style="width:${Math.round(width * 1.3)}px" role="img" aria-label="드럼 악보">${parts.join('')}</svg>`;
+    // 크래시처럼 높은 음의 빔이 위로 잘리지 않게 아래로 밀기
+    const shift = Math.max(0, 16 - Math.min(...groups.map((g) => g.beamY)));
+    const height = rowY(Math.max(rows, 1) - 1) + 8 + shift;
+    return `<svg viewBox="0 0 ${width} ${height}" style="width:${Math.round(width * 1.3)}px" role="img" aria-label="드럼 악보"><g transform="translate(0 ${shift})">${parts.join('')}</g></svg>`;
   }
 
   /** 마디 단위로 줄을 나눠 그림 */
@@ -460,6 +563,75 @@
     noiseHit(time, { freq: 7000, type: 'highpass', level, decay: open ? 0.32 : 0.045, pan: 0.15 });
   }
 
+  // 탐: 음높이가 조금 떨어지는 사인파
+  function tom(time, freq, level) {
+    const ctx = audio();
+    const osc = ctx.createOscillator();
+    osc.frequency.setValueAtTime(freq, time);
+    osc.frequency.exponentialRampToValueAtTime(freq * 0.62, time + 0.3);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(level, time);
+    g.gain.exponentialRampToValueAtTime(0.001, time + 0.4);
+    osc.connect(g).connect(ctx.destination);
+    osc.start(time);
+    osc.stop(time + 0.45);
+    noiseHit(time, { freq: 1800, type: 'bandpass', level: level * 0.25, decay: 0.03 });
+  }
+
+  // 심벌: 서로 안 맞는 높이의 사각파 여러 개 + 고역 잡음 (금속성 소리)
+  function cymbal(time, level, decay, pan = -0.2) {
+    const ctx = audio();
+    const hp = ctx.createBiquadFilter();
+    hp.type = 'highpass';
+    hp.frequency.value = 5000;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(level * 0.5, time);
+    g.gain.exponentialRampToValueAtTime(0.001, time + decay);
+    let node = hp.connect(g);
+    if (ctx.createStereoPanner) { const p = ctx.createStereoPanner(); p.pan.value = pan; node = node.connect(p); }
+    node.connect(ctx.destination);
+    for (const f of [205.3, 304.4, 369.6, 522.7, 540, 800]) {
+      const o = ctx.createOscillator();
+      o.type = 'square';
+      o.frequency.value = f * 1.7;
+      o.connect(hp);
+      o.start(time);
+      o.stop(time + decay + 0.05);
+    }
+    noiseHit(time, { freq: 6000, type: 'highpass', level: level * 0.6, decay: decay * 0.8, pan });
+  }
+
+  // 크로스 스틱: 짧고 높은 '딱'
+  function rim(time, level) {
+    const ctx = audio();
+    const osc = ctx.createOscillator();
+    osc.type = 'triangle';
+    osc.frequency.value = 1750;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(level, time);
+    g.gain.exponentialRampToValueAtTime(0.001, time + 0.04);
+    osc.connect(g).connect(ctx.destination);
+    osc.start(time);
+    osc.stop(time + 0.05);
+    noiseHit(time, { freq: 3500, type: 'bandpass', q: 2, level: level * 0.6, decay: 0.03 });
+  }
+
+  const TOM_FREQ = { 1: 220, 2: 165, 3: 105 };
+
+  /** 악보 기호 하나 소리 내기 (t: 마디 안 위치, scale: 전체 음량) */
+  function playHead(h, time, { t = 0, hand = 'R', scale = 1 } = {}) {
+    if (h === 'S') snare(time, hand, 0.85 * scale);
+    else if (h === 'G') snare(time, hand, 0.16 * scale);
+    else if (h === 'M') rim(time, 0.45 * scale);
+    else if (h === 'K') kick(time, 0.85 * scale);
+    else if (h === 'H') hat(time, false, (t % 24 === 0 ? 0.42 : 0.3) * scale);
+    else if (h === 'O') hat(time, true, 0.4 * scale);
+    else if (h === 'P') noiseHit(time, { freq: 5000, type: 'highpass', level: 0.22 * scale, decay: 0.03, pan: 0.15 });
+    else if (h === 'C') cymbal(time, (t % 24 === 0 ? 0.32 : 0.24) * scale, 0.5);
+    else if (h === 'X') cymbal(time, 0.55 * scale, 1.6, 0.25);
+    else if (TOM_FREQ[h]) tom(time, TOM_FREQ[h], 0.8 * scale);
+  }
+
   function click(time, accent) {
     const ctx = audio();
     const osc = ctx.createOscillator();
@@ -473,7 +645,7 @@
   }
 
   // ---------- 탭 ----------
-  const MODES = { rud: '루디먼트', acc: '액센트', groove: '그루브', read: '리딩' };
+  const MODES = { rud: '루디먼트', acc: '액센트', groove: '그루브', sub: '서브디비전', read: '리딩' };
 
   function init({ settings, persist }) {
     const saved = settings.drum || {};
@@ -488,6 +660,10 @@
       custom: saved.custom || Array(16).fill(false).map((_, i) => i % 4 === 0),
       random: saved.random || randomAccents(),
       groove: saved.groove || 'rock8',
+      fillBars: saved.fillBars ?? 0,
+      fill: saved.fill || 'eighth',
+      subLadder: saved.subLadder || 'up',
+      subBars: saved.subBars || 1,
       readLevel: saved.readLevel || 'easy',
       readBars: saved.readBars || 2,
       readCount: saved.readCount ?? true,
@@ -507,7 +683,8 @@
     const el = {
       modes: $('d-modes'), list: $('d-list'), kick: $('d-kick'),
       accType: $('d-acc-type'), accN: $('d-acc-n'), accNField: $('d-acc-n-field'), accStick: $('d-acc-stick'), accNew: $('d-acc-new'), strokes: $('d-acc-strokes'),
-      grooves: $('d-grooves'),
+      grooves: $('d-grooves'), fillBars: $('d-fill-bars'), fill: $('d-fill'), fillField: $('d-fill-field'),
+      subLadder: $('d-sub-ladder'), subBars: $('d-sub-bars'),
       readLevel: $('d-read-level'), readBars: $('d-read-bars'), readCount: $('d-read-count'), readNew: $('d-read-new'),
       name: $('d-name'), desc: $('d-desc'), score: $('d-score'), legend: $('d-legend'),
       play: $('d-play'), bpm: $('d-bpm'), down: $('d-down'), up: $('d-up'), loop: $('d-loop'), click: $('d-click'),
@@ -537,7 +714,29 @@
       }
       if (st.mode === 'groove') {
         const g = GROOVES.find((x) => x.id === st.groove) || GROOVES[0];
-        return { staff: 'five', name: g.name, desc: g.desc, notes: grooveNotes(g), swing: g.swing };
+        if (!st.fillBars) return { staff: 'five', name: g.name, desc: g.desc, notes: grooveNotes(g), swing: g.swing };
+        // 그루브 N마디 + 필인 1마디. 반복하면 필인 다음 첫 박에 크래시
+        const f = FILLS.find((x) => x.id === st.fill) || FILLS[0];
+        const notes = [];
+        for (let b = 0; b <= st.fillBars; b++) {
+          const bar = b < st.fillBars ? grooveNotes(g) : fillBar(g, f);
+          bar.forEach((n) => notes.push({ ...n, t: n.t + b * BAR }));
+        }
+        const first = notes[0];
+        if (first.t === 0) first.heads = ['X', ...first.heads.filter((h) => !['H', 'O', 'C'].includes(h))];
+        else notes.unshift({ t: 0, ticks: first.t, heads: ['X'], accent: false, graces: '', labels: [{ text: '1', cls: 'c' }] });
+        return {
+          staff: 'five', swing: g.swing, notes,
+          name: `${g.name} + ${f.name}`,
+          desc: `${st.fillBars}마디 그루브 + 1마디 필인. ${f.desc} 필인 다음 첫 박은 크래시.`,
+        };
+      }
+      if (st.mode === 'sub') {
+        const l = LADDERS[st.subLadder] || LADDERS.up;
+        return {
+          staff: 'one', name: '서브디비전 계단', notes: subNotes(st.subLadder, st.subBars), level: (n) => (n.accent ? 0.95 : 0.45),
+          desc: `${l.label}. ${st.subBars}마디마다 쪼개기가 바뀜. 박 첫 음은 액센트, 템포는 그대로.`,
+        };
       }
       if (!reading) reading = readingNotes(st.readLevel, st.readBars, st.readCount);
       reading.forEach((n) => { n.labels = [st.readCount ? { text: countLabel(n.t), cls: 'c' } : null]; });
@@ -570,8 +769,16 @@
         el.accNField.hidden = st.accType !== 'group';
         el.accNew.hidden = st.accType !== 'random';
       } else if (st.mode === 'groove') {
-        el.grooves.innerHTML = GROOVES.map((g) =>
-          `<button type="button" data-groove="${g.id}" class="${g.id === st.groove ? 'on' : ''}">${g.name}</button>`).join('');
+        const cats = [...new Set(GROOVES.map((g) => g.cat))];
+        el.grooves.innerHTML = cats.map((c) =>
+          `<div class="d-cat"><small>${c}</small>${GROOVES.filter((g) => g.cat === c).map((g) =>
+            `<button type="button" data-groove="${g.id}" class="${g.id === st.groove ? 'on' : ''}">${g.name}</button>`).join('')}</div>`).join('');
+        el.fillBars.value = st.fillBars;
+        el.fill.value = st.fill;
+        el.fillField.hidden = !st.fillBars;
+      } else if (st.mode === 'sub') {
+        el.subLadder.value = st.subLadder;
+        el.subBars.value = st.subBars;
       } else {
         el.readLevel.value = st.readLevel;
         el.readBars.value = st.readBars;
@@ -608,7 +815,19 @@
           }[k]}</span>`).join('') : '') + '<span>음표 클릭: 액센트 켜기·끄기</span>';
       }
       if (st.mode === 'groove') {
-        return '<span><b>×</b> 하이햇 (맨 위)</span><span><b>×°</b> 오픈 하이햇</span><span><b>●</b> 스네어 (가운데)</span><span><b>●</b> 킥 (맨 아래)</span><span>아래 숫자: 카운트 (1 e & a)</span>';
+        // 지금 악보에 나온 기호만
+        const used = new Set(score.notes.flatMap((n) => n.heads));
+        const NAMES = [
+          ['X', '<b>×</b> 크래시 (덧줄 위)'], ['H', '<b>×</b> 하이햇 (맨 위)'], ['O', '<b>×°</b> 오픈 하이햇'], ['C', '<b>×</b> 라이드 (첫째 줄)'],
+          ['1', '<b>●</b> 하이 탐'], ['2', '<b>●</b> 미드 탐'], ['S', '<b>●</b> 스네어 (가운데)'], ['G', '<b>(●)</b> 고스트 노트 (아주 작게)'],
+          ['M', '<b>⊗</b> 크로스 스틱 (스틱을 눕혀 림 치기)'], ['3', '<b>●</b> 플로어 탐'], ['K', '<b>●</b> 킥'], ['P', '<b>×</b> 하이햇 페달 (줄 아래)'],
+        ];
+        return NAMES.filter(([h]) => used.has(h)).map(([, t]) => `<span>${t}</span>`).join('') +
+          (st.fillBars ? '<span>필인 아래 줄: 손 (R 오른손, L 왼손, K 킥)</span>' : '') +
+          '<span>아래 숫자: 카운트 (1 e & a, 셋잇단은 1 trip let)</span>';
+      }
+      if (st.mode === 'sub') {
+        return `${hands}<span><b>&gt;</b> 박 첫 음 액센트</span><span>새 쪼개기가 시작하는 곳에 이름 표시</span><span>박자 클릭을 켜 두고 박에 맞춰 바꾸기</span>`;
       }
       return '<span>점음표: 1.5배 길이</span><span>빈 머리: 2분음표</span><span>아래 숫자: 카운트 (1 e & a)</span>';
     }
@@ -654,10 +873,9 @@
     function play(n, time) {
       const level = score.level ? score.level(n) : 0.8;
       for (const h of n.heads) {
-        if (h === 'S') snare(time, n.hand || 'R', st.mode === 'groove' ? 0.85 : level);
+        if (h === 'S') snare(time, n.hand || 'R', score.level ? level : 0.85);
         else if (h === 'K') kick(time, n.hand === 'K' && n.accent ? 1 : 0.85);
-        else if (h === 'H') hat(time, false, n.t % 24 === 0 ? 0.42 : 0.3);
-        else if (h === 'O') hat(time, true, 0.4);
+        else playHead(h, time, { t: n.t, hand: n.hand || 'R' });
       }
       if (n.graces) {
         const graceHand = n.hand === 'R' ? 'L' : 'R';
@@ -707,6 +925,10 @@
     el.accType.innerHTML = Object.entries(ACCENT_TYPES).map(([v, t]) => `<option value="${v}">${t.label}</option>`).join('');
     el.accN.innerHTML = [2, 3, 4, 5, 6, 7].map((n) => `<option value="${n}">${n}개마다</option>`).join('');
     el.accStick.innerHTML = Object.entries(STICKINGS).map(([v, s]) => `<option value="${v}">${s.label}</option>`).join('');
+    el.fillBars.innerHTML = Object.entries(FILL_BARS).map(([v, t]) => `<option value="${v}">${t}</option>`).join('');
+    el.fill.innerHTML = FILLS.map((f) => `<option value="${f.id}">${f.name}</option>`).join('');
+    el.subLadder.innerHTML = Object.entries(LADDERS).map(([v, l]) => `<option value="${v}">${l.label}</option>`).join('');
+    el.subBars.innerHTML = [1, 2].map((n) => `<option value="${n}">${n}마디씩</option>`).join('');
     el.ladderStep.innerHTML = [1, 2, 5, 10].map((n) => `<option value="${n}">+${n} BPM</option>`).join('');
 
     el.modes.addEventListener('click', (e) => {
@@ -727,6 +949,10 @@
       const b = e.target.closest('button[data-groove]');
       if (b) change(() => { st.groove = b.dataset.groove; });
     });
+    el.fillBars.addEventListener('change', () => { const v = +el.fillBars.value; change(() => { st.fillBars = v; }); });
+    el.fill.addEventListener('change', () => { const v = el.fill.value; change(() => { st.fill = v; }); });
+    el.subLadder.addEventListener('change', () => { const v = el.subLadder.value; change(() => { st.subLadder = v; }); });
+    el.subBars.addEventListener('change', () => { const v = +el.subBars.value; change(() => { st.subBars = v; }); });
     el.readLevel.addEventListener('change', () => { const v = el.readLevel.value; change(() => { st.readLevel = v; reading = null; }); });
     el.readBars.addEventListener('change', () => { const v = +el.readBars.value; change(() => { st.readBars = v; reading = null; }); });
     el.readCount.addEventListener('change', () => { const v = el.readCount.checked; change(() => { st.readCount = v; }); });
@@ -782,6 +1008,6 @@
 
   global.FretDrum = {
     init, RUDIMENTS, GROOVES, parse: (r) => parseRudiment(r, 'none'), accentExercise, grooveNotes, readingNotes,
-    sound: { audio, snare, kick, hat }, // 잼 트랙에서 같은 오디오로 반주
+    sound: { audio, snare, kick, hat, playHead }, // 잼 트랙에서 같은 오디오로 반주
   };
 })(window);
