@@ -28,6 +28,7 @@
     strum: { guitarOnly: true, label: '코드 스트럼', help: '코드를 잡고 한 번에 스트럼. 마이크로 코드 판정' },
     change: { guitarOnly: true, label: '코드 전환', help: '두 코드를 번갈아 치며 정해진 시간 동안 전환 횟수 측정' },
     board: { label: '지판 찍기', help: '마이크 없이 지판을 눌러 음 위치나 코드 구성음 찾기' },
+    tabread: { label: 'TAB 리딩', help: 'TAB 악보의 음을 차례로 치기. 마이크·지판 클릭·MIDI로 답' },
     piano: { label: '건반 코드', help: '화면 건반을 눌러 코드 구성음 완성. 마이크 불필요' },
     scale: { label: '스케일', help: '스케일 포지션 보기·듣기. 지판 클릭 또는 기타로 순서대로 연습' },
     triad: { label: '트라이어드', help: '줄 세트별 3화음 기본형·1전위·2전위 위치 보기와 퀴즈' },
@@ -43,7 +44,7 @@
   };
   // 위 줄: 분류, 아래 줄: 그 분류의 탭
   const GROUPS = [
-    { id: 'guitar', label: '기타 연습', drills: ['note', 'tones', 'strum', 'change', 'board', 'scale', 'triad', 'interval'] },
+    { id: 'guitar', label: '기타 연습', drills: ['note', 'tones', 'strum', 'change', 'board', 'tabread', 'scale', 'triad', 'interval'] },
     { id: 'theory', label: '이론+청음', drills: ['piano', 'ear', 'staff', 'build', 'guide', 'analyze'] },
     { id: 'jam', label: '잼 연습', drills: ['jam'] },
     { id: 'drum', label: '드럼', drills: ['drum'] },
@@ -53,7 +54,7 @@
   const forInst = (text) => (FretInst.isBass ? text.replace(/기타/g, '베이스') : text); // 문구의 악기 이름
   const groupOf = (drill) => GROUPS.find((g) => g.drills.includes(drill)) || GROUPS[0];
   // 학습 모드(힌트 항상 표시)를 쓸 수 있는 탭
-  const LEARN_DRILLS = new Set(['note', 'tones', 'strum', 'board', 'piano', 'triad', 'interval', 'staff']);
+  const LEARN_DRILLS = new Set(['note', 'tones', 'strum', 'board', 'piano', 'triad', 'interval', 'staff', 'tabread']);
   const MIC_FREE = new Set(['board', 'piano']); // 화면을 눌러서 답하는 모드
   const PIANO_LOW = 60;  // 건반 시작 (C4)
   const PIANO_KEYS = 24; // 두 옥타브
@@ -89,6 +90,8 @@
     learn: false,
     boardTask: 'note',
     instrument: 'guitar',
+    midi: false,
+    midiSound: true,
   };
 
   // ---------- 저장소 ----------
@@ -117,7 +120,7 @@
   let nextTimer = null;
   let guide = null;       // 코드 가이드 (guide.js)
   let scales = null;      // 스케일 연습 (scales.js)
-  const PAGES = new Set(['guide', 'scale', 'ear', 'drum', 'triad', 'interval', 'jam', 'change', 'stats', 'staff', 'analyze', 'build']); // 자체 화면을 가진 탭 (모듈 파일)
+  const PAGES = new Set(['guide', 'scale', 'ear', 'drum', 'triad', 'interval', 'jam', 'change', 'stats', 'staff', 'analyze', 'build', 'tabread']); // 자체 화면을 가진 탭 (모듈 파일)
   const pages = {};       // 탭 id → 모듈
   let pianoChord = null;  // 가이드에서 건반에 보여줄 코드
 
@@ -129,6 +132,7 @@
   const $ = (id) => document.getElementById(id);
   const el = {
     tabs: $('drill-tabs'), instrument: $('instrument'),
+    midiBtn: $('midi-btn'), midiSound: $('midi-sound'), midiSoundWrap: $('midi-sound-wrap'),
     prompt: $('prompt'), promptString: $('prompt-string'), promptNote: $('prompt-note'), promptTones: $('prompt-tones'), explain: $('prompt-explain'), status: $('status'),
     start: $('btn-start'), hint: $('btn-hint'), skip: $('btn-skip'), reset: $('btn-reset'),
     detNote: $('det-note'), needle: $('det-needle'), level: $('level-bar'), gate: $('level-gate'), chroma: $('chroma'),
@@ -372,8 +376,7 @@
 
   // ---------- 단음 판정 ----------
   function onStableNote(midi) {
-    if (settings.drill === 'scale') { scales.onNote(midi); return; }
-    if (settings.drill === 'guide') { guide.onNote(midi); return; }
+    if (PAGES.has(settings.drill)) { pages[settings.drill].onNote?.(midi); return; } // 스케일·가이드톤·TAB 등
     if (phase !== 'ask' || !question) return;
     if (settings.drill === 'note') judgeNote(midi);
     else if (settings.drill === 'tones') judgeTone(midi);
@@ -815,6 +818,7 @@
   }
 
   function flashWrong(key) {
+    if (!key) return;
     key.classList.remove('wrong');
     void key.offsetWidth;
     key.classList.add('wrong');
@@ -1202,6 +1206,7 @@
       stats: FretStats.init(common),
       staff: FretStaff.init(common),
       build: FretBuild.init(common),
+      tabread: FretTabRead.init(common),
       analyze: FretAnalyze.init(common),
     });
     FretMetronome.init({ settings, persist });
@@ -1372,6 +1377,53 @@
     }
   }
 
+  // ---------- MIDI 키보드 ----------
+  let midiSession = false; // 마이크 없이 MIDI로 진행 중인 단음·구성음 연습
+
+  function initMidi() {
+    el.midiSound.checked = settings.midiSound;
+    el.midiSound.addEventListener('change', () => { settings.midiSound = el.midiSound.checked; persist(); });
+    const show = () => {
+      el.midiBtn.classList.toggle('on', FretMidi.connected);
+      el.midiBtn.textContent = !FretMidi.enabled ? 'MIDI 연결' : FretMidi.connected ? 'MIDI 켜짐' : 'MIDI 장치 없음';
+      el.midiBtn.title = FretMidi.connected ? FretMidi.names.join(', ') : FretMidi.enabled ? '건반을 USB로 연결하면 자동으로 잡힘' : '';
+      el.midiSoundWrap.hidden = !FretMidi.connected;
+    };
+    if (!FretMidi.supported) {
+      el.midiBtn.disabled = true;
+      el.midiBtn.title = '이 브라우저는 MIDI 미지원 (Chrome·Edge에서 사용)';
+    }
+    el.midiBtn.addEventListener('click', async () => {
+      try {
+        await FretMidi.connect();
+        settings.midi = true;
+        persist();
+      } catch (err) {
+        el.midiBtn.title = err.message;
+        el.midiBtn.textContent = 'MIDI 오류';
+        return;
+      }
+      show();
+    });
+    FretMidi.on('state', show);
+    FretMidi.on('note', onMidiNote);
+    // 전에 연결했던 적이 있으면 바로 다시 연결
+    if (settings.midi && FretMidi.supported) FretMidi.connect().then(show, () => {});
+  }
+
+  function onMidiNote(midi) {
+    el.detNote.textContent = noteNameWithOctave(midi);
+    if (isPiano()) {
+      // 화면 건반 범위 밖이면 같은 음이름 건반으로
+      const keys = [...el.piano.querySelectorAll('.key')];
+      const key = keys.find((k) => +k.dataset.midi === midi) || keys.find((k) => +k.dataset.midi % 12 === midi % 12);
+      onPianoKey(midi, key);
+      return;
+    }
+    if (settings.midiSound) playTone(midi, 0, 1.2, 0.2);
+    onStableNote(midi);
+  }
+
   function clampFret(v) {
     const n = parseInt(v, 10);
     return Number.isFinite(n) ? Math.min(24, Math.max(0, n)) : 0;
@@ -1379,6 +1431,7 @@
 
   // ---------- 시작 / 정지 ----------
   function stopSession(message = '정지됨') {
+    midiSession = false;
     el.explain.innerHTML = '';
     stopAudio();
     clearTimeout(nextTimer);
@@ -1401,8 +1454,16 @@
 
   async function toggle() {
     if (MIC_FREE.has(settings.drill) || PAGES.has(settings.drill)) return;
-    if (audio.ctx) {
+    if (audio.ctx || midiSession) {
       stopSession();
+      return;
+    }
+    if (FretMidi.connected) {
+      midiSession = true;
+      el.start.textContent = '정지';
+      el.start.classList.add('stop');
+      el.hint.disabled = el.skip.disabled = false;
+      nextQuestion();
       return;
     }
 
@@ -1435,7 +1496,7 @@
     else if (e.code === 'Space' && settings.drill === 'drum') { e.preventDefault(); pages.drum.toggle(); }
     else if (e.code === 'Space' && settings.drill === 'jam') { e.preventDefault(); pages.jam.toggle(); }
     else if (e.code === 'Space' && settings.drill === 'change') { e.preventDefault(); pages.change.toggle(); }
-    else if (e.code === 'KeyH' && ['triad', 'interval', 'staff'].includes(settings.drill)) pages[settings.drill].giveUp();
+    else if (e.code === 'KeyH' && ['triad', 'interval', 'staff', 'tabread'].includes(settings.drill)) pages[settings.drill].giveUp();
     else if (e.code === 'KeyH' && settings.drill === 'ear') pages.ear.giveUp();
     else if (e.code === 'Space') { e.preventDefault(); skip(); }
     else if (e.code === 'KeyH') giveHint();
@@ -1472,6 +1533,7 @@
   initChroma();
   initPiano();
   initInstrument();
+  initMidi();
   initSettings();
   if (!available(settings.drill)) settings.drill = 'note';
   initTabs();

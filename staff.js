@@ -162,6 +162,15 @@
       wrong(`${s}:${f}`, `오답: ${s}번 줄 ${f}프렛 = ${withOct(q.ghost.dn, q.ghost.acc)} · ${hint}`);
     }
 
+    // MIDI 건반: 음이름 모드는 음이름만, 지판 모드는 실음 또는 적힌 높이(한 옥타브 위)
+    function onNote(midi) {
+      if (!active || !q || q.done) return;
+      if (st.mode === 'name') { answerName(midi % 12); return; }
+      if (midi === q.midi || midi === q.midi + 12) { correct(`정답 · ${withOct(q.dn, q.acc)}`); return; }
+      const d = midi - (q.midi + 12);
+      wrong(`m${midi}`, `오답: ${ctx.noteNameWithOctave(midi)} · 적힌 음은 ${Math.abs(d)}반음 ${d > 0 ? '아래' : '위'}`);
+    }
+
     function giveUp() {
       if (!q || q.done) return;
       q.done = true;
@@ -241,6 +250,7 @@
       deactivate() { clearTimeout(timer); active = false; },
       render() { if (active) render(); },
       onClick,
+      onNote,
       giveUp,
     };
   }

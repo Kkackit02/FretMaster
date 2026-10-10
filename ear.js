@@ -233,6 +233,12 @@
       replay: play,
       giveUp,
       onClick,
+      onNote(midi) {
+        if (!active || !q || q.done || q.kind !== 'find') return;
+        if (midi === q.answer) { correct(); return; }
+        const diff = q.answer - midi;
+        wrong(midi, `오답: ${ctx.noteNameWithOctave(midi)} · 정답은 ${Math.abs(diff)}반음 ${diff > 0 ? '위' : '아래'}`);
+      },
     };
   }
 

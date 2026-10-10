@@ -918,3 +918,29 @@ body[data-drill="build"] :is(.prompt, .controls, .tuner, .chroma) { display: non
 /* ---------- 드럼: 그루브 기호 ---------- */
 .d-paren { font: 400 15px Georgia, serif; fill: #1c1813; text-anchor: middle; }
 .d-note.now .d-paren { fill: #e2483a; }
+
+/* ---------- MIDI ---------- */
+.midi-btn { padding: 5px 10px; font-size: 13px; }
+.midi-btn.on { border-color: var(--good); color: var(--good); }
+.midi-sound { font-size: 13px; }
+
+/* ---------- TAB 리딩 ---------- */
+body[data-drill="tabread"] .tabreadpage { display: grid; }
+body[data-drill="tabread"] :is(.prompt, .controls, .chroma, .piano) { display: none; }
+body[data-drill="tabread"]:not(.listening) .tuner { display: none; }
+.tb-info { color: var(--muted); font-size: 14px; }
+.tb-score { width: 100%; padding: 14px 10px; background: #f4efe4; border-radius: 12px; overflow-x: auto; display: flex; justify-content: center; }
+.tb-score svg { max-width: 100%; height: auto; flex: none; }
+.tb-line { stroke: #8a8070; stroke-width: 1.2; }
+.tb-bar { stroke: #2b2620; stroke-width: 1.4; }
+.tb-clef { font: 800 15px Georgia, serif; fill: #2b2620; text-anchor: middle; }
+.tb-bg { fill: #f4efe4; }
+.tb-bg.cur { fill: #f6d9a8; }
+.tb-num { font: 700 15px system-ui; fill: #1c1813; text-anchor: middle; font-variant-numeric: tabular-nums; }
+.tb-num.cur { fill: #c26a12; }
+.tb-num.missed { fill: #d2453a; }
+.tb-num.done { fill: #1f8a52; }
+.tb-num.playing { fill: #2a6bb0; }
+.tb-name { font: 600 13px system-ui; fill: #6b6252; text-anchor: middle; }
+.tb-name.done { fill: #1f8a52; }
+.tb-key-cur { color: var(--accent); }

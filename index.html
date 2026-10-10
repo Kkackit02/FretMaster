@@ -17,6 +17,8 @@
   <header class="top">
     <h1>Fret<span>Master</span></h1>
     <select id="instrument" class="inst-select" aria-label="악기"></select>
+    <button type="button" id="midi-btn" class="midi-btn">MIDI 연결</button>
+    <label class="check midi-sound" id="midi-sound-wrap" hidden><input type="checkbox" id="midi-sound"> 건반 소리</label>
     <button type="button" id="btn-install" class="install" hidden>앱 설치</button>
     <div class="stats">
       <div><b id="st-correct">0</b><small>정답</small></div>
@@ -245,6 +247,28 @@
         <div class="e-msg" id="sf-msg"></div>
         <div class="d-legend" id="sf-note">
           <span>기타 악보는 실음보다 한 옥타브 높게 표기 (높은음자리표 아래 8). 예: 첫째 줄 E4 = 4번 줄 2프렛</span>
+        </div>
+      </div>
+
+      <div class="page tabreadpage" id="tabread">
+        <div class="d-ctl d-row">
+          <label class="field"><span>문제</span><select id="tb-kind"></select></label>
+          <label class="field"><span>길이</span><select id="tb-len"></select></label>
+          <label class="check"><input type="checkbox" id="tb-names"> 음이름 줄 표시</label>
+        </div>
+        <div class="tb-info" id="tb-info"></div>
+        <div class="tb-score" id="tb-score"></div>
+        <div class="e-msg" id="tb-msg"></div>
+        <div class="g-row e-tools">
+          <button type="button" id="tb-mic" class="primary">기타로 치기 (마이크)</button>
+          <button type="button" id="tb-play">듣기</button>
+          <button type="button" id="tb-skip" class="ghost">정답 보기 <kbd>H</kbd></button>
+          <button type="button" id="tb-new">새 문제</button>
+        </div>
+        <div class="d-legend">
+          <span>가로줄 = 줄 (맨 위가 1번 줄), 숫자 = 프렛</span>
+          <span><b class="tb-key-cur">주황</b> 지금 칠 음</span>
+          <span>답: 마이크로 치기 · 지판에서 그 자리 누르기 · MIDI 건반</span>
         </div>
       </div>
 
@@ -553,6 +577,8 @@
   <script src="staff.js"></script>
   <script src="analyze.js"></script>
   <script src="build.js"></script>
+  <script src="midi.js"></script>
+  <script src="tabread.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
