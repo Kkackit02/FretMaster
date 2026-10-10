@@ -183,6 +183,14 @@
       if (!q) { ctx.renderBoard([]); return; }
       const chord = chordOf(q.root, q.quality);
       el.prompt.innerHTML = `<b>${chord.name}</b> · <b>${INVERSIONS[q.inv].label}</b> · ${setLabel(q.set)}`;
+      if (ctx.learn()) {
+        // 학습 모드: 구성음 설명 + 전위 설명
+        const roleName = (r) => (r === 'R' ? '근음' : r.includes('3') ? '3음' : '5음');
+        const order = INVERSIONS[q.inv].order.map((k) => chord.tones[k]);
+        const lines = FretChords.explain(q.root, q.quality, ctx.accFor(q.root, q.quality), settings.naming)
+          .concat(`${INVERSIONS[q.inv].label}: 맨 아래 ${roleName(order[0].role)}(${order[0].name}) → 아래부터 ${order.map((t) => t.name).join('·')}`);
+        el.prompt.innerHTML += `<div class="prompt-explain">${lines.map((l) => `<div>${l}</div>`).join('')}</div>`;
+      }
       const marks = [...picked.values()].map((c) => ({ ...c, cls: 'hint', still: true, label: '?' }));
       // 정답이 12프렛 너머에만 있을 수도 있으니 지판을 그만큼 늘려 둠
       marks.push({ cls: 'spacer', f: Math.max(...q.answers.flat().map((c) => c.f)) });

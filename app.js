@@ -123,7 +123,7 @@
   const $ = (id) => document.getElementById(id);
   const el = {
     tabs: $('drill-tabs'),
-    prompt: $('prompt'), promptString: $('prompt-string'), promptNote: $('prompt-note'), promptTones: $('prompt-tones'), status: $('status'),
+    prompt: $('prompt'), promptString: $('prompt-string'), promptNote: $('prompt-note'), promptTones: $('prompt-tones'), explain: $('prompt-explain'), status: $('status'),
     start: $('btn-start'), hint: $('btn-hint'), skip: $('btn-skip'), reset: $('btn-reset'),
     detNote: $('det-note'), needle: $('det-needle'), level: $('level-bar'), gate: $('level-gate'), chroma: $('chroma'),
     board: $('fretboard'), piano: $('piano'), pianoLabels: $('set-piano-labels'), boardTask: $('set-board-task'),
@@ -286,6 +286,15 @@
     renderPiano();
     renderBoard();
     if (settings.learn) giveHint(true);
+    renderExplain();
+  }
+
+  // 학습 모드: 코드 문제에서 구성음이 왜 그렇게 되는지
+  function renderExplain() {
+    const show = settings.learn && phase !== 'idle' && isChordDrill() && question?.chord;
+    el.explain.innerHTML = show
+      ? FretChords.explain(question.rootPc, question.type, question.acc, settings.naming).map((l) => `<div>${l}</div>`).join('')
+      : '';
   }
 
   function showPrompt(stringText, note, status, cls = '') {
@@ -1097,6 +1106,7 @@
       persist();
       if (PAGES.has(settings.drill)) pages[settings.drill].render();
       else if (settings.learn) giveHint(true); // 끌 때는 다음 문제부터
+      renderExplain();
     });
     el.tabs.addEventListener('click', (e) => {
       const groupBtn = e.target.closest('button[data-group]');
@@ -1306,6 +1316,7 @@
 
   // ---------- 시작 / 정지 ----------
   function stopSession(message = '정지됨') {
+    el.explain.innerHTML = '';
     stopAudio();
     clearTimeout(nextTimer);
     phase = 'idle';

@@ -172,5 +172,25 @@
     return spell(rootLetter(rootPc, acc) + step, (rootPc + semi) % 12, naming);
   }
 
-  global.FretChords = { TYPES, FORMS, build, best, matches, shapeOf, rootFret, spellDegree };
+  // ---------- 학습용 설명 ----------
+  const INTERVAL_NAME = { 2: '장2도', '♭3': '단3도', 3: '장3도', 4: '완전4도', '♭5': '감5도', 5: '완전5도', '♯5': '증5도', '♭7': '단7도', 7: '장7도' };
+  const STEP_NAME = { 2: '장2도', 3: '단3도', 4: '장3도', 5: '완전4도' };
+
+  /** 구성음이 왜 그렇게 되는지: 근음에서의 음정, 그리고 3도 쌓기 */
+  function explain(rootPc, type, acc = 'sharp', naming = 'letter') {
+    const chord = build(rootPc, type, acc, naming);
+    const semis = TYPES[type].tones.map(([semi]) => semi);
+    const formula = `${chord.name} = ` + chord.tones.map((t, i) =>
+      (i === 0 ? `${t.name}(근음)` : `${t.name}(${INTERVAL_NAME[t.role]}, ${semis[i]}반음)`)).join(' + ');
+    let stack;
+    if (type === 'sus2' || type === 'sus4') {
+      stack = `sus: 3음 대신 ${type === 'sus2' ? '장2도' : '완전4도'} (장·단 구분 없음)`;
+    } else {
+      stack = '3도 쌓기: ' + chord.tones.map((t, i) =>
+        (i === 0 ? t.name : `→${STEP_NAME[semis[i] - semis[i - 1]]}→ ${t.name}`)).join(' ');
+    }
+    return [formula, stack];
+  }
+
+  global.FretChords = { TYPES, FORMS, build, best, matches, shapeOf, rootFret, spellDegree, explain };
 })(window);
