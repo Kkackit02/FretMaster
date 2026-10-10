@@ -195,7 +195,7 @@
         const pcs = st.acc ? [...Array(12).keys()] : LETTER_PC;
         el.answers.innerHTML = pcs.map((pc) => {
           const label = LETTER_PC.includes(pc) ? ctx.noteName(pc) : `${ctx.noteName(pc, 'sharp')}<small>${ctx.noteName(pc, 'flat')}</small>`;
-          const cls = q.done && pc === q.midi % 12 ? 'right' : q.tried.has(pc) ? 'tried' : '';
+          const cls = q.done && pc === q.midi % 12 ? 'right' : q.tried.has(pc) ? 'tried' : ctx.learn() && pc === q.midi % 12 ? 'hint' : '';
           return `<button type="button" class="${cls}" data-pc="${pc}">${label}</button>`;
         }).join('');
         ctx.renderBoard([]);
@@ -203,10 +203,10 @@
         el.answers.innerHTML = '';
         const marks = [];
         if (q.ghost && !q.done) marks.push({ s: q.ghost.s, f: q.ghost.f, midi: q.ghost.s ? OPEN_MIDI[q.ghost.s] + q.ghost.f : 0, cls: 'wrong', still: true });
-        if (q.done || reveal) {
+        if (q.done || reveal || ctx.learn()) {
           for (const [s, o] of Object.entries(OPEN_MIDI)) {
             const f = q.midi - o;
-            if (f >= 0 && f <= 15) marks.push({ s: +s, f, midi: q.midi, cls: reveal ? 'hint' : 'correct', still: true });
+            if (f >= 0 && f <= 15) marks.push({ s: +s, f, midi: q.midi, cls: q.done && !reveal ? 'correct' : 'hint', still: true });
           }
         }
         ctx.renderBoard(marks);

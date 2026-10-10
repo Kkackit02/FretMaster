@@ -49,6 +49,8 @@
     { id: 'stats', label: '기록', drills: ['stats'] },
   ];
   const groupOf = (drill) => GROUPS.find((g) => g.drills.includes(drill)) || GROUPS[0];
+  // 학습 모드(힌트 항상 표시)를 쓸 수 있는 탭
+  const LEARN_DRILLS = new Set(['note', 'tones', 'strum', 'board', 'piano', 'triad', 'interval', 'staff']);
   const MIC_FREE = new Set(['board', 'piano']); // 화면을 눌러서 답하는 모드
   const PIANO_LOW = 60;  // 건반 시작 (C4)
   const PIANO_KEYS = 24; // 두 옥타브
@@ -81,6 +83,7 @@
     sound: true,
     sensitivity: 60,
     pianoLabels: true,
+    learn: false,
     boardTask: 'note',
   };
 
@@ -282,6 +285,7 @@
     renderChromaTargets();
     renderPiano();
     renderBoard();
+    if (settings.learn) giveHint(true);
   }
 
   function showPrompt(stringText, note, status, cls = '') {
@@ -313,6 +317,7 @@
   }
 
   function recordResult(clean, ms) {
+    if (settings.learn) return; // 학습 모드는 보면서 푸는 연습이라 약점 기록에서 제외
     const st = stats[question.key] || (stats[question.key] = { seen: 0, clean: 0, cleanMs: 0 });
     st.seen++;
     if (clean) { st.clean++; st.cleanMs += ms; }
@@ -528,10 +533,12 @@
     return question.targets.map((t) => ({ ...t, cls: 'hint' }));
   }
 
-  function giveHint() {
+  function giveHint(learn = false) {
     if (phase !== 'ask' || !question) return;
     question.hinted = true;
-    setStatus(isPiano() ? '힌트: 파란 테두리 건반' : isChordDrill() ? '힌트: 지판의 구성음 (주황 = 근음)' : '힌트: 파란 점', 'reveal');
+    const where = isPiano() ? '파란 테두리 건반' : isChordDrill() ? '지판의 구성음 (주황 = 근음)' : '파란 점';
+    if (learn) setStatus(`학습 모드 · 정답: ${where}`);
+    else setStatus(`힌트: ${where}`, 'reveal');
     if (settings.drill === 'strum') renderTones(true);
     renderChromaTargets();
     renderPiano();
@@ -1076,11 +1083,21 @@
         ? `<div class="tab-drills" role="tablist">${group.drills.map((id) =>
           `<button type="button" data-drill="${id}" role="tab" class="${id === settings.drill ? 'on' : ''}" aria-selected="${id === settings.drill}">${DRILLS[id].label}</button>`).join('')}</div>`
         : '') +
-      (DRILLS[settings.drill].help ? `<p class="tab-help">${DRILLS[settings.drill].help}</p>` : '');
+      `<div class="tab-help-row">${DRILLS[settings.drill].help ? `<p class="tab-help">${DRILLS[settings.drill].help}</p>` : ''}` +
+      (LEARN_DRILLS.has(settings.drill)
+        ? `<label class="check learn-toggle"><input type="checkbox" id="learn-toggle"${settings.learn ? ' checked' : ''}> 학습 모드 (힌트 항상 표시)</label>`
+        : '') + '</div>';
   }
 
   function initTabs() {
     renderTabs();
+    el.tabs.addEventListener('change', (e) => {
+      if (e.target.id !== 'learn-toggle') return;
+      settings.learn = e.target.checked;
+      persist();
+      if (PAGES.has(settings.drill)) pages[settings.drill].render();
+      else if (settings.learn) giveHint(true); // 끌 때는 다음 문제부터
+    });
     el.tabs.addEventListener('click', (e) => {
       const groupBtn = e.target.closest('button[data-group]');
       if (groupBtn) {
@@ -1152,6 +1169,7 @@
       accFor: (pc, type) => pickAccidental(pc, type, true),
       score: scoreExternal, chime: playChime, startMic: micStart, stopMic: micStop,
       shapeMarks, rangeMarks, getStats: () => stats,
+      learn: () => settings.learn,
       // 진행 분석기 → 잼 트랙·코드 가이드
       sendProgression: (target, prog, key) => { pages[target].setProgression(prog, key); switchDrill(target); },
     };
@@ -1333,7 +1351,7 @@
   }
 
   el.start.addEventListener('click', toggle);
-  el.hint.addEventListener('click', giveHint);
+  el.hint.addEventListener('click', () => giveHint());
   el.skip.addEventListener('click', skip);
 
   document.addEventListener('keydown', (e) => {

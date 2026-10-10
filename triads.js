@@ -188,6 +188,8 @@
       marks.push({ cls: 'spacer', f: Math.max(...q.answers.flat().map((c) => c.f)) });
       if (q.done || reveal) {
         q.answers.forEach((v) => v.forEach((c) => marks.push(markOf(c, chord, reveal ? 'hint' : INVERSIONS[q.inv].cls))));
+      } else if (ctx.learn()) {
+        q.answers.forEach((v) => v.forEach((c) => marks.push(markOf(c, chord, 'hint')))); // 학습 모드: 정답 자리 미리 표시
       }
       ctx.renderBoard(marks);
     }

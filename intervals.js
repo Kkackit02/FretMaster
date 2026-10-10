@@ -154,6 +154,8 @@
       q.wrongMarks.forEach((m) => marks.push({ ...m, cls: 'wrong', still: true }));
       if (q.done || reveal) {
         cellsOf(q.target).forEach((c) => marks.push({ ...c, label: SHORT[q.iv], cls: reveal ? 'hint' : 'correct' }));
+      } else if (ctx.learn()) {
+        cellsOf(q.target).forEach((c) => marks.push({ ...c, label: SHORT[q.iv], cls: 'hint', still: true })); // 학습 모드
       }
       ctx.renderBoard(marks);
     }

@@ -177,6 +177,31 @@
       }
     }
 
+    /**
+     * 재생 중에 설정을 바꿀 때: 아직 예약하지 않은 다음 사건의 박자 위치를 그대로 두고
+     * 그 지점부터 새 설정(BPM·악기·박 수·키)으로 이어서 재생
+     */
+    function applyLive(change) {
+      if (!run.on) { change(); return; }
+      const oldTick = 60 / st.bpm / 24;
+      const next = run.events.ev[run.idx];
+      let pos = next ? next.t : run.events.total;           // 다음에 예약할 위치 (틱)
+      const at = run.loopStart + pos * oldTick;             // 그 위치가 원래 울릴 시각
+      const oldPer = st.beats * 24;
+      change();
+      // 코드당 박 수가 바뀌면 지금 코드는 그대로 두고 그 안의 위치만 새 길이에 맞춤
+      const newPer = st.beats * 24;
+      if (newPer !== oldPer) {
+        const idx = Math.floor(pos / oldPer);
+        pos = idx * newPer + Math.min(pos % oldPer, newPer);
+      }
+      run.events = buildEvents();
+      if (pos >= run.events.total) pos %= run.events.total; // 진행이 짧아졌으면 감아서
+      run.loopStart = at - pos * (60 / st.bpm / 24);
+      run.idx = run.events.ev.findIndex((e) => e.t >= pos);
+      if (run.idx < 0) run.idx = run.events.ev.length;
+    }
+
     function start() {
       if (!st.prog.length) return;
       const ac = S().audio();
@@ -308,20 +333,28 @@
       // 키를 바꾸면 진행도 같이 옮김 (조옮김)
       const [pc, mode] = el.key.value.split(':');
       const shift = (+pc - st.key.pc + 12) % 12;
-      st.prog = st.prog.map((c) => ({ ...c, rootPc: (c.rootPc + shift) % 12 }));
-      st.key = { pc: +pc, mode };
+      applyLive(() => {
+        st.prog = st.prog.map((c) => ({ ...c, rootPc: (c.rootPc + shift) % 12 }));
+        st.key = { pc: +pc, mode };
+      });
       save();
       render();
     });
-    const setBpm = (v) => { st.bpm = Math.max(40, Math.min(220, Math.round(+v || st.bpm))); el.bpm.value = st.bpm; save(); };
+    const setBpm = (v) => {
+      applyLive(() => { st.bpm = Math.max(40, Math.min(220, Math.round(+v || st.bpm))); });
+      el.bpm.value = st.bpm;
+      save();
+    };
     el.bpm.addEventListener('change', () => setBpm(el.bpm.value));
     el.down.addEventListener('click', () => setBpm(st.bpm - 5));
     el.up.addEventListener('click', () => setBpm(st.bpm + 5));
-    el.beats.addEventListener('change', () => { st.beats = +el.beats.value; save(); renderDots(-1); });
-    el.groove.addEventListener('change', () => { st.groove = el.groove.value; save(); });
-    el.drums.addEventListener('change', () => { st.drums = el.drums.checked; save(); });
-    el.bass.addEventListener('change', () => { st.bass = el.bass.checked; save(); });
-    el.comp.addEventListener('change', () => { st.comp = el.comp.value; save(); });
+    // 재생 중이면 바로 적용
+    const live = (fn) => () => { applyLive(fn); save(); render(); };
+    el.beats.addEventListener('change', live(() => { st.beats = +el.beats.value; renderDots(-1); }));
+    el.groove.addEventListener('change', live(() => { st.groove = el.groove.value; }));
+    el.drums.addEventListener('change', live(() => { st.drums = el.drums.checked; }));
+    el.bass.addEventListener('change', live(() => { st.bass = el.bass.checked; }));
+    el.comp.addEventListener('change', live(() => { st.comp = el.comp.value; }));
     el.scales.addEventListener('click', (e) => {
       const b = e.target.closest('button[data-scale]');
       if (b) { st.scale = b.dataset.scale; save(); render(); }

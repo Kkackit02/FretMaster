@@ -749,7 +749,19 @@
     });
 
     el.play.addEventListener('click', () => (run.on ? stop() : start()));
-    const setBpm = (v) => { st.bpm = Math.max(30, Math.min(260, Math.round(+v || st.bpm))); el.bpm.value = st.bpm; save(); };
+    const setBpm = (v) => {
+      const bpm = Math.max(30, Math.min(260, Math.round(+v || st.bpm)));
+      if (run.on) {
+        // 다음에 예약할 음의 박자 위치는 그대로 두고 그 뒤부터 새 템포로 (박이 튀지 않게)
+        const total = score.notes.reduce((a, n) => a + n.ticks, 0);
+        const pos = run.idx < score.notes.length ? score.notes[run.idx].t : total;
+        const at = run.loopStart + pos * (60 / st.bpm / 24);
+        run.loopStart = at - pos * (60 / bpm / 24);
+      }
+      st.bpm = bpm;
+      el.bpm.value = st.bpm;
+      save();
+    };
     el.bpm.addEventListener('change', () => setBpm(el.bpm.value));
     el.down.addEventListener('click', () => setBpm(st.bpm - 5));
     el.up.addEventListener('click', () => setBpm(st.bpm + 5));
