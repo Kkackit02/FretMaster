@@ -944,3 +944,19 @@ body[data-drill="tabread"]:not(.listening) .tuner { display: none; }
 .tb-name { font: 600 13px system-ui; fill: #6b6252; text-anchor: middle; }
 .tb-name.done { fill: #1f8a52; }
 .tb-key-cur { color: var(--accent); }
+
+/* ---------- 테크닉 ---------- */
+body[data-drill="technique"] .techpage { display: grid; }
+body[data-drill="technique"] :is(.prompt, .controls, .tuner, .chroma, .piano) { display: none; }
+.tq-list { justify-content: center; }
+.tq-beam { stroke: #2b2620; stroke-width: 2.5; }
+.tq-slur { fill: none; stroke: #2b2620; stroke-width: 1.3; }
+.tq-tech { font: italic 700 12px Georgia, serif; fill: #2b2620; text-anchor: middle; }
+.tq-pick { font: 700 14px system-ui; text-anchor: middle; }
+.tq-pick.d { fill: #2a6bb0; }
+.tq-pick.u { fill: #b4651c; }
+.tq-finger { font: 600 13px system-ui; fill: #6b6252; text-anchor: middle; }
+.tq-pick.cur, .tq-finger.cur { fill: #c26a12; }
+.tq-best { color: var(--muted); font-size: 14px; }
+.fb-mark.tq-pos circle { fill: #cfc4ad; }
+#tq-score { flex-direction: column; align-items: center; gap: 2px; }

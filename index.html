@@ -250,6 +250,40 @@
         </div>
       </div>
 
+      <div class="page techpage" id="technique">
+        <div class="d-modes" id="tq-cats"></div>
+        <div class="d-cat tq-list" id="tq-list"></div>
+        <div class="d-ctl d-row">
+          <label class="field"><span>시작 프렛</span><select id="tq-base"></select></label>
+          <label class="check"><input type="checkbox" id="tq-pick"> 피킹 방향</label>
+          <label class="check"><input type="checkbox" id="tq-finger"> 손가락 번호</label>
+        </div>
+        <div class="d-head">
+          <b id="tq-name"></b>
+          <p id="tq-desc"></p>
+        </div>
+        <div class="tb-score" id="tq-score"></div>
+        <div class="g-row s-actions">
+          <button type="button" id="tq-play" class="primary">▶ 재생</button>
+          <div class="m-bpm">
+            <button type="button" id="tq-down" aria-label="느리게">−</button>
+            <input type="number" id="tq-bpm" min="30" max="260"> <small>BPM</small>
+            <button type="button" id="tq-up" aria-label="빠르게">+</button>
+          </div>
+          <label class="check"><input type="checkbox" id="tq-click"> 박자 클릭</label>
+          <div class="d-ladder">
+            <label class="check"><input type="checkbox" id="tq-ladder"> 반복마다 템포 올리기</label>
+            <select id="tq-ladder-step"></select>
+            <label class="m-max">최대 <input type="number" id="tq-ladder-max" min="30" max="260"></label>
+          </div>
+        </div>
+        <div class="g-row e-tools">
+          <span class="tq-best" id="tq-best"></span>
+          <button type="button" id="tq-save">성공 기록</button>
+        </div>
+        <div class="d-legend" id="tq-legend"></div>
+      </div>
+
       <div class="page tabreadpage" id="tabread">
         <div class="d-ctl d-row">
           <label class="field"><span>문제</span><select id="tb-kind"></select></label>
@@ -579,6 +613,7 @@
   <script src="build.js"></script>
   <script src="midi.js"></script>
   <script src="tabread.js"></script>
+  <script src="technique.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

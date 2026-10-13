@@ -28,6 +28,7 @@
     strum: { guitarOnly: true, label: '코드 스트럼', help: '코드를 잡고 한 번에 스트럼. 마이크로 코드 판정' },
     change: { guitarOnly: true, label: '코드 전환', help: '두 코드를 번갈아 치며 정해진 시간 동안 전환 횟수 측정' },
     board: { label: '지판 찍기', help: '마이크 없이 지판을 눌러 음 위치나 코드 구성음 찾기' },
+    technique: { label: '테크닉', help: '피킹·해머링·풀링·핑거링 연습. TAB·피킹 방향·손가락 번호를 보고 소리에 맞춰 치기' },
     tabread: { label: 'TAB 리딩', help: 'TAB 악보의 음을 차례로 치기. 마이크·지판 클릭·MIDI로 답' },
     piano: { label: '건반 코드', help: '화면 건반을 눌러 코드 구성음 완성. 마이크 불필요' },
     scale: { label: '스케일', help: '스케일 포지션 보기·듣기. 지판 클릭 또는 기타로 순서대로 연습' },
@@ -44,7 +45,7 @@
   };
   // 위 줄: 분류, 아래 줄: 그 분류의 탭
   const GROUPS = [
-    { id: 'guitar', label: '기타 연습', drills: ['note', 'tones', 'strum', 'change', 'board', 'tabread', 'scale', 'triad', 'interval'] },
+    { id: 'guitar', label: '기타 연습', drills: ['note', 'tones', 'strum', 'change', 'board', 'technique', 'tabread', 'scale', 'triad', 'interval'] },
     { id: 'theory', label: '이론+청음', drills: ['piano', 'ear', 'staff', 'build', 'guide', 'analyze'] },
     { id: 'jam', label: '잼 연습', drills: ['jam'] },
     { id: 'drum', label: '드럼', drills: ['drum'] },
@@ -120,7 +121,7 @@
   let nextTimer = null;
   let guide = null;       // 코드 가이드 (guide.js)
   let scales = null;      // 스케일 연습 (scales.js)
-  const PAGES = new Set(['guide', 'scale', 'ear', 'drum', 'triad', 'interval', 'jam', 'change', 'stats', 'staff', 'analyze', 'build', 'tabread']); // 자체 화면을 가진 탭 (모듈 파일)
+  const PAGES = new Set(['guide', 'scale', 'ear', 'drum', 'triad', 'interval', 'jam', 'change', 'stats', 'staff', 'analyze', 'build', 'tabread', 'technique']); // 자체 화면을 가진 탭 (모듈 파일)
   const pages = {};       // 탭 id → 모듈
   let pianoChord = null;  // 가이드에서 건반에 보여줄 코드
 
@@ -1207,6 +1208,7 @@
       staff: FretStaff.init(common),
       build: FretBuild.init(common),
       tabread: FretTabRead.init(common),
+      technique: FretTechnique.init(common),
       analyze: FretAnalyze.init(common),
     });
     FretMetronome.init({ settings, persist });
@@ -1496,6 +1498,7 @@
     else if (e.code === 'Space' && settings.drill === 'drum') { e.preventDefault(); pages.drum.toggle(); }
     else if (e.code === 'Space' && settings.drill === 'jam') { e.preventDefault(); pages.jam.toggle(); }
     else if (e.code === 'Space' && settings.drill === 'change') { e.preventDefault(); pages.change.toggle(); }
+    else if (e.code === 'Space' && settings.drill === 'technique') { e.preventDefault(); pages.technique.toggle(); }
     else if (e.code === 'KeyH' && ['triad', 'interval', 'staff', 'tabread'].includes(settings.drill)) pages[settings.drill].giveUp();
     else if (e.code === 'KeyH' && settings.drill === 'ear') pages.ear.giveUp();
     else if (e.code === 'Space') { e.preventDefault(); skip(); }
