@@ -960,3 +960,17 @@ body[data-drill="technique"] :is(.prompt, .controls, .tuner, .chroma, .piano) { 
 .tq-best { color: var(--muted); font-size: 14px; }
 .fb-mark.tq-pos circle { fill: #cfc4ad; }
 #tq-score { flex-direction: column; align-items: center; gap: 2px; }
+
+/* 테크닉: 슬라이드 · 벤딩 · 뮤트 기호 */
+.tq-slide { stroke: #2b2620; stroke-width: 1.5; }
+.tq-bend { fill: none; stroke: #2b2620; stroke-width: 1.4; }
+.tq-arrow { fill: #2b2620; }
+.tq-pmline { stroke: #2b2620; stroke-width: 1.2; stroke-dasharray: 4 3; }
+.tq-tech.pm { text-anchor: start; font-style: normal; }
+.tq-dot { fill: #1c1813; }
+.tb-num.dead { font-weight: 800; }
+.tq-bendbox { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px 16px; width: min(560px, 100%); }
+.tq-bendbox[hidden] { display: none; }
+.tq-bendmeter { display: grid; gap: 6px; flex: 1; min-width: 220px; }
+.tq-bendnote { font-size: 14px; color: var(--muted); text-align: center; }
+#tq-bendmic.on { border-color: var(--accent); color: var(--accent); }

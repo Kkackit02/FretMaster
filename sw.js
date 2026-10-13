@@ -1,5 +1,5 @@
 // 오프라인용 서비스 워커: 온라인이면 항상 새 파일(네트워크 우선), 안 되면 저장해 둔 파일
-const CACHE = 'fretmaster-v8';
+const CACHE = 'fretmaster-v9';
 const ASSETS = [
   './',
   'index.html',

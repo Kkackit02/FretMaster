@@ -3,13 +3,15 @@
   'use strict';
 
   const OPEN_MIDI = FretInst.open; // 현재 악기의 개방현 (instrument.js)
-  const CATS = { pick: '피킹', legato: '해머링·풀링', finger: '핑거링' };
+  const CATS = { pick: '피킹', legato: '해머링·풀링', finger: '핑거링', slide: '슬라이드', bend: '벤딩', pm: '팜뮤트', mute: '뮤트' };
   const UNIT_NAME = { 12: '8분음표', 8: '셋잇단', 6: '16분음표' };
 
   // ---------- 연습 만들기 ----------
   // S: 줄 번호, 낮은 줄 → 높은 줄 (기타 [6,5,4,3,2,1]). o: 기준 프렛에서 몇 칸 (0~3 = 검지~새끼)
-  // 음 = { s, o, tech: 'h' | 'p' | null, pick: true(피킹한 음) }
-  const n = (s, o, tech = null) => ({ s, o, tech, pick: !tech });
+  // 음 = { s, o, tech: 'h' | 'p' | 's'(슬라이드) | null, pick: true(피킹한 음), len: 길이(기본 1칸),
+  //        bend: 올리는 반음 수, release: 벤딩 후 원래대로, pm: 팜뮤트, dead: 뮤트 음(x), stacc: 짧게 끊기 }
+  const n = (s, o, tech = null, more = {}) => ({ s, o, tech, pick: !tech, ...more });
+  const top3 = (S) => S.slice(-3); // 높은 세 줄 (벤딩은 주로 1~3번 줄)
   const down = (S) => [...S].reverse();
 
   const EXERCISES = [
@@ -103,6 +105,92 @@
         return [0, 1, 2, 3, 4, 3, 2, 1].flatMap((k) => [0, 1, 2, 3].map((o) => ({ ...n(s, o + k), finger: o + 1 })));
       },
     },
+    // ----- 슬라이드 -----
+    {
+      id: 'slide2', cat: 'slide', name: '슬라이드 (2프렛)', unit: 12,
+      desc: '약지로 짚고 피킹한 뒤 누른 채로 두 프렛 미끄러지기. 도착음도 또렷하게.',
+      make: (S) => [
+        ...S.flatMap((s) => [n(s, 0, null, { finger: 3 }), n(s, 2, 's', { finger: 3 })]),
+        ...down(S).flatMap((s) => [n(s, 2, null, { finger: 3 }), n(s, 0, 's', { finger: 3 })]),
+      ],
+    },
+    {
+      id: 'slideshift', cat: 'slide', name: '슬라이드로 포지션 이동', unit: 12,
+      desc: '스케일을 치다 약지 슬라이드로 위 포지션으로 옮겨 감. 내려올 때도 같은 손가락으로.',
+      make: (S) => {
+        const pair = top3(S).slice(0, 2);
+        return pair.flatMap((s) => [
+          n(s, 0, null, { finger: 1 }), n(s, 2, null, { finger: 3 }), n(s, 4, 's', { finger: 3 }), n(s, 5, null, { finger: 4 }),
+          n(s, 5, null, { finger: 4 }), n(s, 4, null, { finger: 3 }), n(s, 2, 's', { finger: 3 }), n(s, 0, null, { finger: 1 }),
+        ]);
+      },
+    },
+    {
+      id: 'slidein', cat: 'slide', name: '슬라이드 인·아웃', unit: 12,
+      desc: '두 프렛 아래에서 미끄러져 들어가고(인), 치고 나서 아래로 빠져나오기(아웃).',
+      make: (S) => top3(S).flatMap((s) => [
+        n(s, 0, null, { finger: 3, len: 0.5 }), n(s, 2, 's', { finger: 3, len: 1.5 }),
+        n(s, 2, null, { finger: 3, len: 1.5 }), n(s, 0, 's', { finger: 3, len: 0.5 }),
+      ]),
+    },
+    // ----- 벤딩 -----
+    {
+      id: 'bendhalf', cat: 'bend', name: '반음 벤딩', unit: 12,
+      desc: '목표음(한 프렛 위)을 먼저 치고, 같은 높이까지 약지로 밀어 올리기. 중지·검지로 받쳐서.',
+      make: (S) => top3(S).flatMap((s) => [n(s, 3, null, { finger: 4, len: 2 }), n(s, 2, null, { finger: 3, len: 2, bend: 1 })]),
+    },
+    {
+      id: 'bendfull', cat: 'bend', name: '온음 벤딩', unit: 12,
+      desc: '목표음(두 프렛 위)을 먼저 듣고 맞추기. 손가락이 아니라 손목을 돌려서 올리기.',
+      make: (S) => top3(S).flatMap((s) => [n(s, 4, null, { finger: 4, len: 2 }), n(s, 2, null, { finger: 3, len: 2, bend: 2 })]),
+    },
+    {
+      id: 'bendrel', cat: 'bend', name: '벤딩 & 릴리즈', unit: 12,
+      desc: '온음 올렸다가 피킹 없이 천천히 원래 음으로 내리기. 이어서 풀링.',
+      make: (S) => top3(S).flatMap((s) => [n(s, 2, null, { finger: 3, len: 3, bend: 2, release: true }), n(s, 0, 'p', { finger: 1, len: 1 })]),
+    },
+    // ----- 팜뮤트 -----
+    {
+      id: 'pm8', cat: 'pm', name: '팜뮤트 8분', unit: 12,
+      desc: '오른손 날을 브리지 바로 앞 줄에 살짝 얹고 다운으로만. 뮤트 없는 음과 차이가 나게.',
+      make: (S) => Array(2).fill(0).flatMap(() => [0, 0, 0, 1, 0, 0, 1, 0].map((open) => n(S[0], 0, null, { pm: !open }))),
+    },
+    {
+      id: 'gallop', cat: 'pm', name: '갤럽 (8분 + 16분 둘)', unit: 6, alt: true,
+      desc: '"따 다다" 리듬을 팜뮤트로. 다운-다운-업, 박마다 첫 음이 커지지 않게.',
+      make: (S) => Array(8).fill(0).flatMap(() => [n(S[0], 0, null, { pm: true, len: 2 }), n(S[0], 0, null, { pm: true }), n(S[0], 0, null, { pm: true })]),
+    },
+    {
+      id: 'pmriff', cat: 'pm', name: '팜뮤트 리프', unit: 6, alt: true,
+      desc: '낮은 줄은 뮤트, 높은 음은 손을 떼고 크게. 손날을 붙였다 뗐다 빠르게.',
+      make: (S) => Array(4).fill(0).flatMap(() => [
+        n(S[0], 0, null, { pm: true }), n(S[0], 0, null, { pm: true }), n(S[1], 2, null, { finger: 3 }), n(S[0], 0, null, { pm: true }),
+        n(S[0], 0, null, { pm: true }), n(S[1], 0, null, { finger: 1 }), n(S[0], 0, null, { pm: true }), n(S[1], 3, null, { finger: 4 }),
+      ]),
+    },
+    // ----- 뮤트 -----
+    {
+      id: 'dead', cat: 'mute', name: '뮤트 음 (데드 노트)', unit: 6, alt: true,
+      desc: 'x는 왼손을 줄에 살짝 얹어 "칙" 소리만. 오른손은 16분으로 계속 움직이기.',
+      make: (S) => {
+        const s = S[Math.max(0, S.length - 3)];
+        return Array(2).fill(0).flatMap(() => [1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 1, 0].map((on) => n(s, 2, null, { finger: 3, dead: !on })));
+      },
+    },
+    {
+      id: 'stacc', cat: 'mute', name: '끊어 치기 (스타카토)', unit: 12,
+      desc: '치자마자 왼손 힘을 빼 소리를 끊기. 줄에서 손가락을 떼지는 말고 압력만 풀기.',
+      make: (S) => [...S, ...down(S)].flatMap((s) => [n(s, 0, null, { stacc: true }), n(s, 2, null, { stacc: true })]),
+    },
+    {
+      id: 'skipmute', cat: 'mute', name: '안 치는 줄 막기', unit: 6, alt: true,
+      desc: '줄을 건너뛸 때 사이 줄이 울리지 않게: 왼손 검지 끝과 오른손 날로 나머지 줄 막기.',
+      make: (S) => {
+        const out = [];
+        for (let k = 0; k + 3 < S.length; k++) out.push(n(S[k], 0), n(S[k + 3], 2), n(S[k], 2), n(S[k + 3], 0));
+        return out.concat(out.slice().reverse());
+      },
+    },
   ];
 
   // ---------- 소리: 카플러스-스트롱 (뜯는 줄 소리) ----------
@@ -145,15 +233,66 @@
     return buf;
   }
 
-  function pluck(midi, time, { soft = false, dur = 0.6 } = {}) {
+  let noise = null;
+
+  // 뮤트 음: 음높이 없는 짧은 '칙'
+  function deadNote(time) {
+    const ctx = audio();
+    if (!noise) {
+      noise = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.06), ctx.sampleRate);
+      const d = noise.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / d.length) ** 2;
+    }
+    const src = ctx.createBufferSource();
+    src.buffer = noise;
+    const f = ctx.createBiquadFilter();
+    f.type = 'bandpass';
+    f.frequency.value = 1400;
+    f.Q.value = 0.8;
+    const g = ctx.createGain();
+    g.gain.value = 0.5;
+    src.connect(f).connect(g).connect(ctx.destination);
+    src.start(time);
+  }
+
+  /**
+   * 줄 소리 한 번.
+   * bend: 올릴 반음 수, release: 올렸다 내리기, slideFrom: 이 높이에서 미끄러져 옴, pm: 팜뮤트
+   */
+  function pluck(midi, time, { soft = false, dur = 0.6, bend = 0, release = false, slideFrom = null, pm = false } = {}) {
     const ctx = audio();
     const src = ctx.createBufferSource();
     src.buffer = pluckBuffer(midi, soft);
+    const rate = src.playbackRate;
+    if (slideFrom !== null) {
+      rate.setValueAtTime(2 ** ((slideFrom - midi) / 12), time);
+      rate.linearRampToValueAtTime(1, time + Math.min(0.12, dur * 0.4));
+    }
+    if (bend) {
+      const up = 2 ** (bend / 12);
+      rate.setValueAtTime(1, time + 0.03);
+      rate.linearRampToValueAtTime(up, time + Math.min(0.25, dur * 0.3));
+      if (release) {
+        rate.setValueAtTime(up, time + dur * 0.55);
+        rate.linearRampToValueAtTime(1, time + dur * 0.85);
+      }
+    }
+    let level = soft ? 0.32 : 0.45;
+    let node = src;
+    if (pm) {
+      // 팜뮤트: 고음을 깎고 짧게
+      const lp = ctx.createBiquadFilter();
+      lp.type = 'lowpass';
+      lp.frequency.value = 700;
+      node = src.connect(lp);
+      dur = Math.min(dur, 0.16);
+      level = 0.7;
+    }
     const g = ctx.createGain();
-    g.gain.setValueAtTime(soft ? 0.32 : 0.45, time);
-    g.gain.setValueAtTime(soft ? 0.32 : 0.45, time + Math.max(0.02, dur - 0.04));
+    g.gain.setValueAtTime(level, time);
+    g.gain.setValueAtTime(level, time + Math.max(0.02, dur - 0.04));
     g.gain.linearRampToValueAtTime(0.0001, time + dur); // 다음 음이 나오면 앞 음은 멈춤 (같은 줄)
-    src.connect(g).connect(ctx.destination);
+    node.connect(g).connect(ctx.destination);
     src.start(time);
     src.stop(time + dur + 0.02);
   }
@@ -197,6 +336,7 @@
       name: $('tq-name'), desc: $('tq-desc'), score: $('tq-score'), best: $('tq-best'), saveBest: $('tq-save'),
       play: $('tq-play'), bpm: $('tq-bpm'), down: $('tq-down'), up: $('tq-up'), click: $('tq-click'),
       ladder: $('tq-ladder'), ladderStep: $('tq-ladder-step'), ladderMax: $('tq-ladder-max'), legend: $('tq-legend'),
+      bendBox: $('tq-bendbox'), bendMic: $('tq-bendmic'), bendNote: $('tq-bendnote'), bendNeedle: $('tq-bendneedle'), bendMsg: $('tq-bendmsg'),
     };
 
     function save() {
@@ -209,60 +349,116 @@
     function build() {
       const def = EXERCISES.find((e) => e.id === st.id) || EXERCISES[0];
       const S = [...FretInst.strings].sort((a, b) => b - a); // 낮은 줄 → 높은 줄
-      const notes = def.make(S).map((x, i) => {
+      let t = 0;
+      const notes = def.make(S).map((x) => {
         const f = st.base + x.o;
-        // 얼터네이트는 음마다 다운·업 교대, 레가토는 피킹하는 음만 다운
-        const pick = x.pick ? (def.alt && i % 2 ? 'U' : 'D') : null;
-        return { ...x, f, midi: OPEN_MIDI[x.s] + f, finger: x.finger ?? x.o + 1, pickDir: pick, t: i * def.unit };
+        const ticks = (x.len || 1) * def.unit;
+        // 얼터네이트는 칸 위치로 다운·업 (16분 칸의 앞이 다운), 나머지는 피킹하는 음만 다운
+        const pick = x.pick ? (def.alt && Math.round(t / def.unit) % 2 ? 'U' : 'D') : null;
+        const nt = { ...x, f, midi: OPEN_MIDI[x.s] + f, finger: x.finger ?? x.o + 1, pickDir: pick, t, ticks };
+        t += ticks;
+        return nt;
       });
-      ex = { def, notes, total: notes.length * def.unit };
+      ex = { def, notes, total: t };
     }
 
     // ---------- 그리기 ----------
     // 두 마디씩 한 줄
+    const LINE_TICKS = 192;
+
     function drawTab() {
-      const per = (24 / ex.def.unit) * 8;
-      const out = [];
-      for (let a = 0; a < ex.notes.length; a += per) out.push(drawLine(a, Math.min(ex.notes.length, a + per)));
-      return out.join('');
+      const lines = [];
+      ex.notes.forEach((nt, k) => {
+        const li = Math.floor(nt.t / LINE_TICKS);
+        (lines[li] ||= []).push(k);
+      });
+      const most = Math.max(...lines.filter(Boolean).map((l) => l.reduce((a, k) => a + slots(ex.notes[k]), 0)));
+      return lines.filter(Boolean).map((ks) => drawLine(ks, most)).join('');
     }
 
-    function drawLine(from, to) {
+    const BEND_LABEL = { 1: '½', 2: 'full' };
+    const slots = (nt) => Math.max(1, nt.len || 1); // 긴 음은 자리를 더 차지
+
+    function drawLine(ks, most) {
       const N = FretInst.strings.length;
-      const gap = 16, top = 44, left = 46, stepX = ex.def.unit === 12 ? 40 : 30;
-      const beatNotes = 24 / ex.def.unit;
+      const gap = 16, top = 52, left = 46, stepX = ex.def.unit === 12 ? 40 : 30;
       const y = (s) => top + (s - 1) * gap;
       const bottom = y(N);
-      const width = left + (24 / ex.def.unit) * 8 * stepX + 24; // 줄마다 같은 너비
+      const width = left + most * stepX + 24; // 줄마다 같은 너비
       const rowPick = bottom + 24, rowFinger = bottom + (st.showPick ? 44 : 24);
       const height = rowFinger + (st.showFinger ? 10 : -10) + 8;
       const parts = [];
-      const lastX = left + (to - from) * stepX + 8;
+      const lastX = left + ks.reduce((a, k) => a + slots(ex.notes[k]), 0) * stepX + 8;
       for (let s = 1; s <= N; s++) parts.push(`<line class="tb-line" x1="8" x2="${lastX}" y1="${y(s)}" y2="${y(s)}"/>`);
       parts.push(`<line class="tb-bar" x1="8" x2="8" y1="${y(1)}" y2="${bottom}"/><line class="tb-bar" x1="${lastX}" x2="${lastX}" y1="${y(1)}" y2="${bottom}"/>`);
       ['T', 'A', 'B'].forEach((ch, k) => parts.push(`<text class="tb-clef" x="24" y="${(y(1) + bottom) / 2 + (k - 1) * 15 + 5}">${ch}</text>`));
-      const xs = ex.notes.map((_, k) => left + (k - from) * stepX + stepX / 2);
-      ex.notes.slice(from, to).forEach((nt, j) => {
-        const k = from + j;
-        const x = xs[k];
-        // 마디선 (4박마다)
-        if (k > from && k % (beatNotes * 4) === 0) parts.push(`<line class="tb-bar" x1="${x - stepX / 2}" x2="${x - stepX / 2}" y1="${y(1)}" y2="${bottom}"/>`);
-        // 박 묶음 표시 (TAB 아래 짧은 빔)
-        if (k % beatNotes === 0) {
-          const x2 = xs[Math.min(to - 1, k + beatNotes - 1)];
-          parts.push(`<line class="tq-beam" x1="${x - 4}" x2="${x2 + 4}" y1="${bottom + 9}" y2="${bottom + 9}"/>`);
-        }
-        const text = String(nt.f);
+      const xOf = new Map();
+      let cx = left;
+      ks.forEach((k) => { xOf.set(k, cx + stepX / 2); cx += slots(ex.notes[k]) * stepX; });
+
+      // 박 묶음 (TAB 아래 짧은 빔)
+      const beats = new Map();
+      ks.forEach((k) => {
+        const b = Math.floor(ex.notes[k].t / 24);
+        (beats.get(b) || beats.set(b, []).get(b)).push(k);
+      });
+      for (const group of beats.values()) {
+        if (group.length < 2) continue; // 한 박에 한 음이면 빔 없음
+        parts.push(`<line class="tq-beam" x1="${xOf.get(group[0]) - 4}" x2="${xOf.get(group[group.length - 1]) + 4}" y1="${bottom + 9}" y2="${bottom + 9}"/>`);
+      }
+
+      // 팜뮤트 구간: 위에 P.M. ----
+      let run0 = null;
+      const flushPM = (endK) => {
+        if (run0 === null) return;
+        const x0 = xOf.get(run0) - 8, x1 = xOf.get(endK) + 8;
+        parts.push(`<text class="tq-tech pm" x="${x0}" y="${y(1) - 20}">P.M.</text>`);
+        if (x1 - x0 > 34) parts.push(`<line class="tq-pmline" x1="${x0 + 30}" x2="${x1}" y1="${y(1) - 24}" y2="${y(1) - 24}"/>`);
+        run0 = null;
+      };
+      ks.forEach((k, j) => {
+        if (ex.notes[k].pm) { if (run0 === null) run0 = k; } else flushPM(ks[j - 1]);
+      });
+      flushPM(ks[ks.length - 1]);
+
+      ks.forEach((k, j) => {
+        const nt = ex.notes[k];
+        const x = xOf.get(k);
+        // 마디선
+        if (j > 0 && nt.t % 96 === 0) parts.push(`<line class="tb-bar" x1="${x - stepX / 2}" x2="${x - stepX / 2}" y1="${y(1)}" y2="${bottom}"/>`);
+        const text = nt.dead ? 'x' : String(nt.f);
         const w = text.length * 9 + 6;
         const cur = k === run.cur ? ' cur' : '';
         parts.push(`<rect class="tb-bg${cur}" x="${x - w / 2}" y="${y(nt.s) - 9}" width="${w}" height="18" rx="4"/>`);
-        parts.push(`<text class="tb-num${cur}" x="${x}" y="${y(nt.s) + 5}">${text}</text>`);
-        // 해머링·풀링: 앞 음과 이어지는 호 + 글자
-        if (nt.tech && k > from) {
-          const x0 = xs[k - 1];
-          const yTop = Math.min(y(nt.s), y(ex.notes[k - 1].s)) - 12;
-          parts.push(`<path class="tq-slur" d="M${x0} ${yTop} Q${(x0 + x) / 2} ${yTop - 10} ${x} ${yTop}"/>`);
-          parts.push(`<text class="tq-tech" x="${(x0 + x) / 2}" y="${yTop - 10}">${nt.tech}</text>`);
+        parts.push(`<text class="tb-num${cur}${nt.dead ? ' dead' : ''}" x="${x}" y="${y(nt.s) + 5}">${text}</text>`);
+        if (nt.stacc) parts.push(`<circle class="tq-dot" cx="${x}" cy="${y(nt.s) + 13}" r="2"/>`);
+        // 해머링·풀링: 앞 음과 이어지는 호 + 글자 / 슬라이드: 비스듬한 선
+        if (nt.tech && j > 0) {
+          const prev = ex.notes[ks[j - 1]];
+          const x0 = xOf.get(ks[j - 1]);
+          if (nt.tech === 's') {
+            const upward = nt.midi > prev.midi;
+            const yy = y(nt.s);
+            parts.push(`<line class="tq-slide" x1="${x0 + 9}" y1="${yy + (upward ? 5 : -5)}" x2="${x - 9}" y2="${yy + (upward ? -5 : 5)}"/>`);
+            parts.push(`<text class="tq-tech" x="${(x0 + x) / 2}" y="${yy - 13}">sl.</text>`);
+          } else {
+            const yTop = Math.min(y(nt.s), y(prev.s)) - 12;
+            parts.push(`<path class="tq-slur" d="M${x0} ${yTop} Q${(x0 + x) / 2} ${yTop - 10} ${x} ${yTop}"/>`);
+            parts.push(`<text class="tq-tech" x="${(x0 + x) / 2}" y="${yTop - 10}">${nt.tech}</text>`);
+          }
+        }
+        // 벤딩: 위로 휘는 화살표 + ½ / full (릴리즈면 다시 내려오는 화살표)
+        if (nt.bend) {
+          const yy = y(nt.s) - 4, tipY = y(1) - 30;
+          const x1 = x + 8, x2 = x + 16;
+          parts.push(`<path class="tq-bend" d="M${x1} ${yy} Q${x2} ${yy} ${x2} ${tipY + 6}"/>`);
+          parts.push(`<path class="tq-arrow" d="M${x2 - 4} ${tipY + 8} L${x2} ${tipY} L${x2 + 4} ${tipY + 8} Z"/>`);
+          parts.push(`<text class="tq-tech" x="${x2}" y="${tipY - 4}">${BEND_LABEL[nt.bend] || nt.bend}</text>`);
+          if (nt.release) {
+            const x3 = x2 + 14;
+            parts.push(`<path class="tq-bend" d="M${x2 + 2} ${tipY + 4} Q${x3} ${tipY + 4} ${x3} ${yy - 6}"/>`);
+            parts.push(`<path class="tq-arrow" d="M${x3 - 4} ${yy - 12} L${x3} ${yy - 4} L${x3 + 4} ${yy - 12} Z"/>`);
+          }
         }
         if (st.showPick && nt.pickDir) parts.push(`<text class="tq-pick ${nt.pickDir === 'D' ? 'd' : 'u'}${cur}" x="${x}" y="${rowPick}">${nt.pickDir === 'D' ? '⊓' : 'V'}</text>`);
         if (st.showFinger) parts.push(`<text class="tq-finger${cur}" x="${x}" y="${rowFinger}">${nt.finger}</text>`);
@@ -290,6 +486,8 @@
       el.base.value = st.base;
       el.showPick.checked = st.showPick;
       el.showFinger.checked = st.showFinger;
+      el.bendBox.hidden = st.cat !== 'bend';
+      if (st.cat !== 'bend' && bendMic.stream) stopBendMic();
       el.name.textContent = ex.def.name;
       el.desc.textContent = `${ex.def.desc} ${UNIT_NAME[ex.def.unit]}.`;
       el.score.innerHTML = drawTab();
@@ -305,7 +503,11 @@
       el.legend.innerHTML =
         '<span>숫자 = 프렛, 맨 위 줄이 1번 줄</span>' +
         (st.showPick ? '<span><b>⊓</b> 다운 피킹 <b>V</b> 업 피킹</span>' : '') +
-        (st.cat === 'legato' ? '<span><b>h</b> 해머링 <b>p</b> 풀링 (피킹 없이)</span>' : '') +
+        (st.cat === 'legato' || st.id === 'bendrel' ? '<span><b>h</b> 해머링 <b>p</b> 풀링 (피킹 없이)</span>' : '') +
+        (st.cat === 'slide' ? '<span><b>sl.</b> 슬라이드: 누른 채로 미끄러지기 (도착음은 피킹 없이)</span>' : '') +
+        (st.cat === 'bend' ? '<span><b>↑ ½ · full</b> 반음 · 온음 벤딩, <b>↓</b> 릴리즈</span><span>앞 음 = 벤딩 목표음</span>' : '') +
+        (st.cat === 'pm' ? '<span><b>P.M.</b> 팜뮤트 구간 (선이 끝날 때까지)</span>' : '') +
+        (st.cat === 'mute' ? '<span><b>x</b> 뮤트 음 (음 없이 \'칙\')</span><span><b>·</b> 짧게 끊기</span>' : '') +
         (st.showFinger ? '<span>아래 숫자: 손가락 (1 검지 · 2 중지 · 3 약지 · 4 새끼)</span>' : '') +
         '<span>처음엔 느리게, 깨끗하게 되면 5 BPM씩</span>';
       renderBoard();
@@ -339,9 +541,18 @@
         const nt = ex.notes[run.idx];
         const time = run.loopStart + nt.t * tickSec;
         if (time > actx.currentTime + 0.15) return;
-        const dur = Math.max(0.12, ex.def.unit * tickSec * 1.6);
-        pluck(nt.midi, time, { soft: !!nt.tech, dur });
-        if (st.click && nt.t % 24 === 0) click(time, nt.t % 96 === 0);
+        const dur = Math.max(0.12, nt.ticks * tickSec * (nt.stacc ? 0.35 : nt.bend ? 1 : 1.6));
+        const prev = ex.notes[(run.idx - 1 + ex.notes.length) % ex.notes.length];
+        if (nt.dead) deadNote(time);
+        else {
+          pluck(nt.midi, time, {
+            soft: nt.tech === 'h' || nt.tech === 'p', dur, bend: nt.bend || 0, release: !!nt.release, pm: !!nt.pm,
+            slideFrom: nt.tech === 's' ? prev.midi : null,
+          });
+        }
+        if (st.click) {
+          for (let b = Math.ceil(nt.t / 24) * 24; b < nt.t + nt.ticks; b += 24) click(run.loopStart + b * tickSec, b % 96 === 0);
+        }
         const i = run.idx;
         run.visuals.push(setTimeout(() => highlight(i), Math.max(0, (time - actx.currentTime) * 1000)));
         run.idx++;
@@ -392,6 +603,69 @@
       save();
     }
 
+    // ---------- 벤딩 음정 확인 ----------
+    // 마이크로 들은 높이를 이 연습의 벤딩 목표음과 비교 (센트 단위)
+    const bendMic = { stream: null, ctx: null, an: null, buf: null, raf: 0 };
+
+    function bendTargets() {
+      return ex ? [...new Set(ex.notes.filter((x) => x.bend).map((x) => x.midi + x.bend))] : [];
+    }
+
+    async function startBendMic() {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
+      const actx = new (window.AudioContext || window.webkitAudioContext)();
+      const an = actx.createAnalyser();
+      an.fftSize = 4096;
+      actx.createMediaStreamSource(stream).connect(an);
+      Object.assign(bendMic, { stream, ctx: actx, an, buf: new Float32Array(an.fftSize) });
+      el.bendMic.textContent = '마이크 끄기';
+      el.bendMic.classList.add('on');
+      const loop = () => {
+        bendMic.raf = requestAnimationFrame(loop);
+        an.getFloatTimeDomainData(bendMic.buf);
+        if (FretPitch.rms(bendMic.buf) < 0.01) return;
+        const r = FretPitch.detect(bendMic.buf, actx.sampleRate, 0.15, FretInst.minFreq);
+        if (r) showBend(FretPitch.freqToMidi(r.freq));
+      };
+      loop();
+    }
+
+    function stopBendMic() {
+      cancelAnimationFrame(bendMic.raf);
+      bendMic.stream?.getTracks().forEach((tr) => tr.stop());
+      bendMic.ctx?.close();
+      Object.assign(bendMic, { stream: null, ctx: null, an: null });
+      el.bendMic.textContent = '마이크로 벤딩 확인';
+      el.bendMic.classList.remove('on');
+      el.bendNeedle.style.opacity = 0;
+    }
+
+    function showBend(m) {
+      const targets = bendTargets();
+      if (!targets.length) return;
+      // 가장 가까운 목표음 (벤딩 전 음부터 목표까지 오르는 중이어도 그 목표로)
+      const target = targets.reduce((a, b) => (Math.abs(b - m) < Math.abs(a - m) ? b : a));
+      const cents = Math.round((m - target) * 100);
+      el.bendNote.textContent = `목표 ${ctx.noteNameWithOctave(target)} · 지금 ${ctx.noteNameWithOctave(Math.round(m))}`;
+      el.bendNeedle.style.opacity = 1;
+      el.bendNeedle.style.left = `${50 + Math.max(-50, Math.min(50, cents / 2))}%`;
+      const ok = Math.abs(cents) <= 15;
+      el.bendNeedle.style.background = ok ? 'var(--good)' : 'var(--accent)';
+      if (Math.abs(cents) > 120) { el.bendMsg.className = 'e-msg'; el.bendMsg.textContent = '목표에서 멂'; return; }
+      el.bendMsg.className = `e-msg ${ok ? 'good' : 'bad'}`;
+      el.bendMsg.textContent = ok ? `정확 (${cents >= 0 ? '+' : ''}${cents}센트)` : cents < 0 ? `${-cents}센트 덜 올라감` : `${cents}센트 너무 올라감`;
+    }
+
+    el.bendMic.addEventListener('click', async () => {
+      if (bendMic.stream) { stopBendMic(); return; }
+      try {
+        await startBendMic();
+      } catch (err) {
+        el.bendMsg.className = 'e-msg bad';
+        el.bendMsg.textContent = err.name === 'NotAllowedError' ? '마이크 권한 거부됨 (주소창의 권한 설정 확인)' : `마이크 오류: ${err.message}`;
+      }
+    });
+
     // ---------- 이벤트 ----------
     el.base.innerHTML = Array.from({ length: 12 }, (_, k) => k + 1).map((f) => `<option value="${f}">${f}프렛부터</option>`).join('');
     el.ladderStep.innerHTML = [1, 2, 5, 10].map((v) => `<option value="${v}">+${v} BPM</option>`).join('');
@@ -431,7 +705,7 @@
 
     return {
       activate() { active = true; render(); },
-      deactivate() { stop(); active = false; },
+      deactivate() { stop(); stopBendMic(); active = false; },
       render() { if (active && !run.on) render(); },
       toggle() { if (run.on) stop(); else start(); },
       onClick() {}, // 지판을 누르면 소리만 (app.js에서 재생)
